@@ -7,6 +7,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -23,35 +30,52 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Visual Studio cache/options directory
+.vs/
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json
 artifacts/
+*.csproj.user
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
+# Configuration files with secrets (DO NOT COMMIT)
+**/appsettings.Development.json
+**/appsettings.Production.json
+*.key
+*.secret
+
 # NuGet Packages
 *.nupkg
-# NuGet Symbol Packages
 *.snupkg
 
-# dotenv environment variables file
-.env
-
-# Others
-~$*
-*~
+# Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResults/
 CodeCoverage/
+CoverageReport/
 
 # MSBuild Binary and Structured Log
 *.binlog
 
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
+# Rider
+.idea/
+*.sln.iml
 
-# NUnit
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
+# MCP
+.playwright-mcp/*
+
+# Spec Kit — regenerable artifacts (scripts, installation state)
+# Commands, templates, memory, extensions config, and workflows are kept (project governance and agent behavior)
+.specify/scripts/
+.specify/extensions/**/scripts/
+.specify/extensions/.registry
+.specify/integrations/
+
+# Others
+~$*
+*~

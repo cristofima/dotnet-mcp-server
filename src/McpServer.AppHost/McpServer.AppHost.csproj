@@ -1,0 +1,17 @@
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.2.1">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>33403db0-2215-4ba3-b619-8411b6c31250</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MCP-Server\McpServer.Presentation\McpServer.Presentation.csproj" />
+    <ProjectReference Include="..\McpServer.BackendApi\McpServer.BackendApi.csproj" />
+    <ProjectReference Include="..\McpServer.ServiceDefaults\McpServer.ServiceDefaults.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

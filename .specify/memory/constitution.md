@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   Sync Impact Report
   ==================
   Version change: 0.0.0 (template) → 1.0.0
@@ -37,7 +37,7 @@ authentication and App Role authorization. Specific rules:
 - Token passthrough from the MCP client to the downstream API is NEVER permitted.
   The OBO (On-Behalf-Of) exchange via MSAL is the sole allowed pattern for obtaining
   downstream access tokens.
-- Permission constants MUST be sourced from `McpBaseline.Domain.Constants.Permissions`;
+- Permission constants MUST be sourced from `McpServer.Domain.Constants.Permissions`;
   hardcoded string literals for role names are prohibited.
 - Rate limiting (fixed window, 100 req/min per identity) and CORS (configured via
   `Cors:AllowedOrigins`) MUST be active in all non-development environments.
@@ -61,7 +61,7 @@ Domain → Application → Infrastructure → Presentation.
 - Presentation (MCP Server) is the composition root; it references all lower layers but
   contains no business logic.
 - Cross-cutting concerns (OpenTelemetry, Serilog, health checks, resilience) belong in
-  `McpBaseline.ServiceDefaults`, referenced by service entry points only.
+  `McpServer.ServiceDefaults`, referenced by service entry points only.
 
 **Rationale**: Enforcing the dependency rule keeps business logic testable without HTTP,
 MSAL, or telemetry dependencies, and prevents infrastructure details from leaking into
@@ -116,8 +116,8 @@ infrastructure component that changes MUST have corresponding test coverage.
 - xUnit v3 is the only permitted test framework. NUnit, MSTest, FluentAssertions,
   AutoFixture, and Bogus are prohibited.
 - Assertions MUST use plain `Assert.*`; no wrapper assertion libraries.
-- Moq 4.x is permitted only in `McpBaseline.Infrastructure.Tests` and
-  `McpBaseline.Presentation.Tests`. Application tests MUST use no mocks.
+- Moq 4.x is permitted only in `McpServer.Infrastructure.Tests` and
+  `McpServer.Presentation.Tests`. Application tests MUST use no mocks.
 - One test project per Clean Architecture layer; cross-layer concerns MUST NOT be
   tested in the same class.
 - Test naming convention: `MethodName_StateUnderTest_ExpectedBehavior`
@@ -136,7 +136,7 @@ environments in CI.
 | Runtime | .NET 10, C# 13 | Aspire workload required |
 | MCP SDK | ModelContextProtocol.AspNetCore v1.2.0 | Streamable HTTP at `/mcp` |
 | Identity | Microsoft Entra ID | JWT Bearer + App Roles + MSAL OBO |
-| Orchestration (local) | .NET Aspire | `McpBaseline.AppHost` |
+| Orchestration (local) | .NET Aspire | `McpServer.AppHost` |
 | Orchestration (prod) | Azure App Services | Linux, `DOTNETCORE\|10.0` |
 | Telemetry | OpenTelemetry SDK 1.15.0 | Traces, metrics, logs via OTLP |
 | Logging | Serilog | Console + file (compact JSON, daily roll) |
@@ -157,8 +157,8 @@ Every contribution MUST satisfy all of the following before merge:
   PR description and a corresponding entry in the `Complexity Tracking` table of
   `plan.md`.
 - `dotnet test` passes for all three test projects:
-  `McpBaseline.Application.Tests`, `McpBaseline.Infrastructure.Tests`,
-  `McpBaseline.Presentation.Tests`.
+  `McpServer.Application.Tests`, `McpServer.Infrastructure.Tests`,
+  `McpServer.Presentation.Tests`.
 - All curly braces are present on `if`/`else`/`for`/`foreach`/`while` blocks, including
   single-line guard clauses (SonarQube S121).
 - Public constant-like values use `public static string { get; }` except where

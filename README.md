@@ -11,6 +11,7 @@ Reference implementation of a **Model Context Protocol (MCP) server** secured wi
 
 ## Project Structure
 
+[![SafeSkill 50/100](https://img.shields.io/badge/SafeSkill-50%2F100_Use%20with%20Caution-orange)](https://safeskill.dev/scan/cristofima-dotnet-mcp-server)
 ```
 MCP-Server/                        # MCP Server project (Clean Architecture, 4 layers)
     McpServer.Presentation/        #   Presentation: MCP tools, prompts, middleware, composition root

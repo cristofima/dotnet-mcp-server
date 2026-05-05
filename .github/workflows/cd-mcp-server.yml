@@ -1,0 +1,53 @@
+name: "CD — MCP Server"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/MCP-Server/**"
+      - "src/McpServer.Shared/**"
+      - "src/McpServer.ServiceDefaults/**"
+      - ".github/workflows/cd-mcp-server.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_VERSION: "10.x"
+
+jobs:
+  deploy:
+    name: Build and Deploy MCP Server
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish
+        run: >
+          dotnet publish src/MCP-Server/McpServer.Presentation/McpServer.Presentation.csproj
+          --configuration Release
+          --output ./publish
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_MCP_SERVER_APP_NAME }}
+          package: ./publish

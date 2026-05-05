@@ -18,6 +18,14 @@ hooks:
     prompt: Execute speckit.git.feature?
     description: Create feature branch before specification
     condition: null
+  - extension: branch-convention
+    command: speckit.branch-convention.validate
+    enabled: true
+    optional: true
+    prompt: Validate branch naming convention before creating new feature?
+    description: Check naming convention compliance before /specify creates a new
+      branch
+    condition: null
   before_clarify:
   - extension: git
     command: speckit.git.commit

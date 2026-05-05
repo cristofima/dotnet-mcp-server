@@ -1,0 +1,23 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/McpServer.Shared/McpServer.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Backend API/">
+    <Project Path="src/McpServer.BackendApi/McpServer.BackendApi.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosting/">
+    <Project Path="src/McpServer.AppHost/McpServer.AppHost.csproj" />
+    <Project Path="src/McpServer.ServiceDefaults/McpServer.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/MCP Server/">
+    <Project Path="src/MCP-Server/McpServer.Application/McpServer.Application.csproj" Id="29967bdc-1da4-4e2f-9d38-f39a86fe481b" />
+    <Project Path="src/MCP-Server/McpServer.Domain/McpServer.Domain.csproj" Id="02cab0ff-a4f0-4e92-81bb-6a920c260745" />
+    <Project Path="src/MCP-Server/McpServer.Infrastructure/McpServer.Infrastructure.csproj" Id="839f06f5-657d-4e9f-8b10-0d52196b09b1" />
+    <Project Path="src/MCP-Server/McpServer.Presentation/McpServer.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/McpServer.Application.Tests/McpServer.Application.Tests.csproj" />
+    <Project Path="tests/McpServer.Infrastructure.Tests/McpServer.Infrastructure.Tests.csproj" />
+    <Project Path="tests/McpServer.Presentation.Tests/McpServer.Presentation.Tests.csproj" />
+  </Folder>
+</Solution>

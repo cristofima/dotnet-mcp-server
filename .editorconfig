@@ -1,0 +1,9 @@
+root = true
+
+[*.cs]
+# CA1848: Use the LoggerMessage delegates — suppressed for application-level code.
+# Source-generated logging ([LoggerMessage]) is recommended for libraries and high-throughput hot paths.
+# For an internal MCP server, direct ILogger extension methods (_logger.LogXxx) provide better
+# readability with negligible performance difference. See:
+# https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1848
+dotnet_diagnostic.CA1848.severity = none

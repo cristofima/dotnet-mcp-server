@@ -1,0 +1,33 @@
+# Copy this file to terraform.tfvars and fill in real values.
+# Never commit terraform.tfvars to version control.
+
+# Short unique identifier (3-8 lowercase alphanumeric chars) used in globally unique
+# Azure resource names: Key Vault (kv-<prefix>), SQL Server (sql-<prefix>),
+# App Services (app-<prefix>-mcp, app-<prefix>-api).
+# Use your initials, a short project code, or a random string.
+# Example: "abc", "jdoe", "mcp001"
+prefix = "<your-prefix>"
+
+# Entra ID tenant ID (GUID) — find with: az account show --query tenantId -o tsv
+tenant_id = "<your-entra-id-tenant-id>"
+
+# Azure subscription ID (GUID) — find with: az account show --query id -o tsv
+subscription_id = "<your-azure-subscription-id>"
+
+# Azure region for SQL Server, Key Vault, Log Analytics, App Insights
+# Note: some VS subscriptions have SQL ProvisioningDisabled in westeurope — try northeurope or eastus
+location = "northeurope"
+
+# Azure region for App Service Plan and Web Apps
+# May differ from 'location' when regional quota restrictions apply
+app_service_location = "westeurope"
+
+# SQL Server administrator credentials
+# Username must not be a reserved word (admin, sa, root, etc.)
+# Password must meet Azure SQL complexity: >=8 chars, uppercase, lowercase, digit, special char
+sql_admin_username = "sqladmin"
+sql_admin_password = "<your-secure-sql-password>"
+
+# (Optional) .NET version for App Service application stack
+# Default: "8.0" — change to "10.0" when available on your App Service platform
+# dotnet_version = "8.0"

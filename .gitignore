@@ -69,9 +69,10 @@ CoverageReport/
 # MCP
 .playwright-mcp/*
 
-# Spec Kit — regenerable artifacts (scripts, installation state)
+# Spec Kit — regenerable artifacts (scripts, installation state, cache)
 # Commands, templates, memory, extensions config, and workflows are kept (project governance and agent behavior)
 .specify/scripts/
+.specify/extensions/.cache/
 .specify/extensions/**/scripts/
 .specify/extensions/.registry
 .specify/integrations/

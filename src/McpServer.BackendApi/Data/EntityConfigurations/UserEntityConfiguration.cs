@@ -14,6 +14,7 @@ internal sealed class UserEntityConfiguration : IEntityTypeConfiguration<UserEnt
     public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
         builder.HasKey(u => u.Id);
+        builder.Property(u => u.Id).ValueGeneratedNever();
 
         builder.Property(u => u.Username).IsRequired().HasMaxLength(50);
         builder.Property(u => u.Role).IsRequired().HasMaxLength(50);

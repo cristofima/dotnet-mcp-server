@@ -4,6 +4,7 @@ using McpServer.BackendApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace McpServer.BackendApi.Data.Migrations
 {
     [DbContext(typeof(MockApiDbContext))]
-    partial class MockApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506201714_RemoveUserIdIdentity")]
+    partial class RemoveUserIdIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

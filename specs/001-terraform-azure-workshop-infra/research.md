@@ -87,12 +87,12 @@ resource "azuread_application_password" "example" {
 
 **Question**: What value should `site_config.application_stack.dotnet_version` be set to for a .NET 10 application?
 
-**Decision**: Use a variable `dotnet_version` with default `"v8.0"` for maximum compatibility with azurerm ~3.x, and document the upgrade path to `"v10.0"` in quickstart.md.
+**Decision**: Use `"10.0"` as the default for `dotnet_version`, enabled by the azurerm ~> 4.0 provider upgrade.
 
-**Rationale**: Accepted `dotnet_version` values depend on the Azure platform stack support at the time of apply, not just the provider version. `"v8.0"` (LTS) is universally available and sufficient for infrastructure provisioning. The application deployment pipeline (GitHub Actions) overrides the runtime stack during deployment. Workshop operators who need .NET 10 can update the variable.
+**Rationale**: azurerm ~> 3.x only accepted values up to `"8.0"`. Upgrading to azurerm 4.x (v4.71.0) unlocks `"10.0"` support, aligning the infrastructure stack with the project's .NET 10 runtime target.
 
 **Alternatives considered**:
-- Hardcode `"v10.0"`: Risks failing `terraform apply` on older platform images before .NET 10 GA is fully rolled out.
+- Stay on `"8.0"` with azurerm 3.x: Mismatches the application runtime. Rejected.
 - Omit `application_stack` block: Not recommended — explicit version avoids platform version drift.
 
 ---

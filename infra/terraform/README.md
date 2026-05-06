@@ -33,13 +33,13 @@ Copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your values. T
 | `prefix` | Yes | 3-8 lowercase alphanumeric chars; prepended to globally unique names (Key Vault, SQL Server, App Services) |
 | `tenant_id` | Yes | Entra ID tenant ID — `az account show --query tenantId -o tsv` |
 | `subscription_id` | Yes | Azure subscription ID — `az account show --query id -o tsv` |
-| `location` | No | Region for SQL Server, Key Vault, Log Analytics, App Insights. Default: `northeurope` |
-| `app_service_location` | No | Region for the App Service Plan and Web Apps. Default: `westeurope` |
+| `location` | No | Region for SQL Server, Key Vault, Log Analytics, App Insights. Default: `centralus` |
+| `app_service_location` | No | Region for the App Service Plan and Web Apps. Default: `centralus` |
 | `sql_admin_username` | Yes | SQL Server admin login. Reserved words (`admin`, `sa`, `root`) are rejected by Azure |
 | `sql_admin_password` | Yes | SQL Server admin password. Must include uppercase, lowercase, digit, and special character |
-| `dotnet_version` | No | .NET application stack version for App Services. Default: `8.0` |
+| `dotnet_version` | No | .NET application stack version for App Services. Default: `10.0` |
 
-> `location` and `app_service_location` can point to different regions. Visual Studio Enterprise subscriptions commonly have SQL Server disabled in `westeurope` and App Service quota set to 0 in `northeurope`, so the defaults keep them separate.
+> `location` and `app_service_location` can point to different regions. Some Azure subscriptions have quota restrictions that differ by resource type within the same region. Splitting the two variables lets you target each resource type to a region where your subscription has capacity.
 
 ## Apply
 

@@ -28,7 +28,7 @@ Defined in `variables.tf`.
 | `location` | `string` | No | `"westeurope"` | No | Azure region for all resources |
 | `sql_admin_username` | `string` | Yes | — | Yes | SQL Server administrator login |
 | `sql_admin_password` | `string` | Yes | — | Yes | SQL Server administrator password |
-| `dotnet_version` | `string` | No | `"v8.0"` | No | .NET stack version for App Services (e.g., `"v8.0"`, `"v10.0"`) |
+| `dotnet_version` | `string` | No | `"10.0"` | No | .NET stack version for App Services. Requires azurerm ~> 4.0 (current). |
 
 ---
 

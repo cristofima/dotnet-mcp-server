@@ -23,7 +23,7 @@ description: "Task list for Terraform Azure Workshop Infrastructure"
 
 - [X] T001 Create directory `infra/terraform/` at repository root
 - [X] T002 [P] Create `infra/terraform/.gitignore` — exclude `.terraform/`, `terraform.tfstate`, `terraform.tfstate.backup`, `*.tfvars` (but NOT `*.tfvars.example`), `backend.conf`, `*.tfplan`, and `override.tf`
-- [X] T003 [P] Create `infra/terraform/terraform.tfvars.example` — placeholder values for `tenant_id`, `subscription_id`, `location` (`"westeurope"`), `sql_admin_username`, `sql_admin_password`; include comments explaining each variable
+- [X] T003 [P] Create `infra/terraform/terraform.tfvars.example` — placeholder values for `prefix`, `tenant_id`, `subscription_id`, `location` (`"centralus"`), `app_service_location` (`"centralus"`), `sql_admin_username`, `sql_admin_password`; include comments explaining each variable
 
 **Checkpoint**: Directory exists; `.gitignore` and `terraform.tfvars.example` are committed-safe files ready for version control.
 
@@ -35,7 +35,7 @@ description: "Task list for Terraform Azure Workshop Infrastructure"
 
 **⚠️ CRITICAL**: `sql.tf`, `app-service.tf`, `keyvault.tf`, and `entra-id.tf` all reference `azurerm_resource_group.main` — this phase must be complete first.
 
-- [X] T004 Create `infra/terraform/variables.tf` — define all 6 input variables: `tenant_id` (string, required), `subscription_id` (string, required), `location` (string, default `"westeurope"`), `sql_admin_username` (string, sensitive, required), `sql_admin_password` (string, sensitive, required), `dotnet_version` (string, default `"v8.0"`)
+- [X] T004 Create `infra/terraform/variables.tf` — define all 6 input variables: `tenant_id` (string, required), `subscription_id` (string, required), `location` (string, default `"centralus"`), `sql_admin_username` (string, sensitive, required), `sql_admin_password` (string, sensitive, required), `dotnet_version` (string, default `"10.0"`)
 
 - [X] T005 Create `infra/terraform/main.tf` — include: (1) `terraform {}` block with `required_version = "~> 1.9"` and `required_providers` for `azurerm ~> 3.0` and `azuread ~> 2.0`; (2) `provider "azurerm"` block with `subscription_id = var.subscription_id` and `features { key_vault { purge_soft_delete_on_destroy = true, recover_soft_deleted_key_vaults = true } }`; (3) `provider "azuread"` block with `tenant_id = var.tenant_id`; (4) `locals` block with `backend_api_user_impersonation_scope_id = uuidv5("url", "https://backend-api/scopes/user_impersonation")` and `mcp_server_access_scope_id = uuidv5("url", "https://mcp-server/scopes/mcp.access")`; (5) `azurerm_resource_group "main"` named `mcp-server-baseline`; (6) `azurerm_log_analytics_workspace "main"` named `log-mcp-server` (PerGB2018, 30-day retention); (7) `azurerm_application_insights "main"` named `appi-mcp-server` (application_type = "web", workspace_id references log analytics workspace)
 
@@ -116,6 +116,20 @@ description: "Task list for Terraform Azure Workshop Infrastructure"
 - [X] T018 [P] Run `terraform validate` from `infra/terraform/` against the complete file set — zero errors
 
 - [X] T019 [P] Review `infra/terraform/outputs.tf` for completeness — all 7 outputs confirmed, no client secret values exposed
+
+---
+
+## Post-Spec Implementation Notes
+
+The following tasks were not in the original spec but were required during `terraform apply` against a real Azure subscription.
+
+- [X] T020 Add `prefix` variable (3-8 lowercase alphanumeric, validated with regex) to `variables.tf` and `terraform.tfvars.example`; rename all globally unique resources to include `${var.prefix}`: Key Vault (`kv-<prefix>`), SQL Server (`sql-<prefix>`), App Services (`app-<prefix>-mcp`, `app-<prefix>-api`), App Service Plan (`plan-<prefix>`). Resolves name collision errors on `kv-mcp-server` and `sql-backend-api` across subscriptions.
+
+- [X] T021 Add `app_service_location` variable to `variables.tf` with default `"centralus"`; use it in `app-service.tf` for the service plan and both web apps instead of `azurerm_resource_group.main.location`. Required because some Azure regions have quota restrictions that apply to specific resource types but not others — e.g., SQL Server may be unavailable in a region where App Service works fine, or vice versa. Decoupling the two locations lets operators target each resource type to the region where their subscription has capacity. Resources in a resource group can span multiple regions.
+
+- [X] T022 Extend `app_settings` in both `azurerm_linux_web_app` resources in `app-service.tf` with the full Entra ID and downstream API configuration: `EntraId__ClientId`, `EntraId__TenantId`, `EntraId__Scopes__0` (MCP Server); `DownstreamApi__Audience`, `DownstreamApi__Scopes__0`, `DownstreamApi__BaseUrl` (MCP Server); `EntraId__Audience`, `EntraId__TenantId` (Backend API). All values are derived from Terraform resources — no manual portal configuration required.
+
+- [X] T023 Create `infra/terraform/README.md` — first-time setup, variables table with regional restriction notes, resources-by-file table, outputs table, post-apply manual steps, state backend notes, and destroy instructions.
 
 ---
 

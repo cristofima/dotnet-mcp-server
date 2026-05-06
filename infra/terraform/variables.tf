@@ -21,13 +21,13 @@ variable "subscription_id" {
 variable "location" {
   type        = string
   description = "Azure region for SQL Server, Key Vault, Log Analytics, and App Insights."
-  default     = "northeurope"
+  default     = "centralus"
 }
 
 variable "app_service_location" {
   type        = string
   description = "Azure region for the App Service Plan and Web Apps. May differ from 'location' when regional quota restrictions apply."
-  default     = "westeurope"
+  default     = "centralus"
 }
 
 variable "sql_admin_username" {
@@ -44,6 +44,6 @@ variable "sql_admin_password" {
 
 variable "dotnet_version" {
   type        = string
-  description = ".NET application stack version for App Services (e.g., \"8.0\", \"10.0\")."
-  default     = "8.0"
+  description = ".NET application stack version for App Services (e.g., \"9.0\", \"10.0\")."
+  default     = "10.0"
 }

@@ -7,7 +7,7 @@ resource "azurerm_key_vault" "main" {
   tenant_id                 = var.tenant_id
   sku_name                  = "standard"
   purge_protection_enabled  = false
-  enable_rbac_authorization = true
+  rbac_authorization_enabled = true
 }
 
 # Grant the Terraform operator temporary access so secrets can be written during apply.

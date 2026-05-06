@@ -26,7 +26,7 @@ These are the values that must be supplied via `terraform.tfvars` or `-var` flag
 | Variable | Type | Default | Notes |
 |---|---|---|---|
 | `location` | `string` | `"westeurope"` | Any valid Azure region identifier |
-| `dotnet_version` | `string` | `"v8.0"` | App Service application stack version; update to `"v10.0"` when available |
+| `dotnet_version` | `string` | `"10.0"` | App Service application stack version (azurerm ~> 4.0 required) |
 
 ### Example `terraform.tfvars.example`
 

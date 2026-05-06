@@ -15,12 +15,12 @@ tenant_id = "<your-entra-id-tenant-id>"
 subscription_id = "<your-azure-subscription-id>"
 
 # Azure region for SQL Server, Key Vault, Log Analytics, App Insights
-# Note: some VS subscriptions have SQL ProvisioningDisabled in westeurope — try northeurope or eastus
-location = "northeurope"
+# Run: az account list-locations -o table  to find available regions
+location = "centralus"
 
 # Azure region for App Service Plan and Web Apps
-# May differ from 'location' when regional quota restrictions apply
-app_service_location = "westeurope"
+# Can differ from 'location' when a region has quota for one resource type but not another
+app_service_location = "centralus"
 
 # SQL Server administrator credentials
 # Username must not be a reserved word (admin, sa, root, etc.)
@@ -29,5 +29,5 @@ sql_admin_username = "sqladmin"
 sql_admin_password = "<your-secure-sql-password>"
 
 # (Optional) .NET version for App Service application stack
-# Default: "8.0" — change to "10.0" when available on your App Service platform
-# dotnet_version = "8.0"
+# Default: "10.0"
+# dotnet_version = "10.0"

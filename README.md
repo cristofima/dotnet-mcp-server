@@ -226,6 +226,12 @@ npx @modelcontextprotocol/inspector
 
 ## Deployment
 
+### Infrastructure Provisioning (Terraform)
+
+All Azure resources (App Service Plan, Web Apps, SQL Server, Key Vault, Application Insights, Entra ID app registrations) are defined in `infra/terraform/`. A single `terraform apply` provisions the full environment and sets all App Service application settings automatically — no manual portal configuration required.
+
+See [infra/terraform/README.md](infra/terraform/README.md) for setup, variables, and first-run instructions.
+
 ### GitHub Actions Workflows
 
 Three workflows handle CI/CD. All use official GitHub Actions; no artifact registries required.
@@ -284,14 +290,22 @@ az ad app federated-credential create --id $appId --parameters '{
 
 ### App Service Configuration
 
-Configure Entra ID settings in Azure App Service → Configuration → Application settings, **not** in source control. Use Key Vault references for secrets:
+When provisioning with Terraform (`infra/terraform/`), all application settings are set automatically during `terraform apply`: `EntraId__ClientId`, `EntraId__TenantId`, `EntraId__Scopes__0`, `EntraId__ClientSecret` (Key Vault reference), `DownstreamApi__Audience`, `DownstreamApi__Scopes__0`, `DownstreamApi__BaseUrl`, `APPLICATIONINSIGHTS_CONNECTION_STRING` (Key Vault reference), and `ConnectionStrings__Default` (Key Vault reference for the Backend API).
+
+For manual or non-Terraform setups, configure settings via the Azure portal (App Service → Configuration → Application settings) or the CLI. Use Key Vault references for all secrets:
 
 ```bash
 az webapp config appsettings set \
   --name {your-mcp-server-app} \
   --resource-group {your-rg} \
   --settings \
-    EntraId__ClientSecret="@Microsoft.KeyVault(SecretUri=https://your-kv.vault.azure.net/secrets/client-secret/)"
+    EntraId__ClientId="{client-id}" \
+    EntraId__TenantId="{tenant-id}" \
+    EntraId__Scopes__0="api://{client-id}/mcp.access" \
+    EntraId__ClientSecret="@Microsoft.KeyVault(SecretUri=https://your-kv.vault.azure.net/secrets/mcp-server-client-secret/)" \
+    DownstreamApi__Audience="api://{backend-api-client-id}" \
+    DownstreamApi__Scopes__0="api://{backend-api-client-id}/.default" \
+    DownstreamApi__BaseUrl="https://{your-backend-api-app}.azurewebsites.net"
 ```
 
 ## Development Workflow (GitHub Spec Kit)

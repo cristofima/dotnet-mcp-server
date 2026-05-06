@@ -29,6 +29,14 @@ If the user explicitly provided `GIT_BRANCH_NAME` (e.g., via environment variabl
 - Verify Git is available by running `git rev-parse --is-inside-work-tree 2>/dev/null`
 - If Git is not available, warn the user and skip branch creation
 
+## Branch Naming Convention
+
+Before determining the numbering mode, check for a branch-convention configuration:
+
+1. Read `.specify/branch-convention.yml` if it exists.
+2. Extract `convention.branch_pattern`, `convention.type_prefix`, `convention.default_type`, and `convention.seq_padding`.
+3. If `branch_pattern` is present, you will use it to construct the final branch name after the script determines the next sequence number (see **Applying the Convention** below).
+
 ## Branch Numbering Mode
 
 Determine the branch numbering strategy by checking configuration in this order:
@@ -44,7 +52,27 @@ Generate a concise short name (2-4 words) for the branch:
 - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
 - Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)
 
-Run the appropriate script based on your platform:
+Run the appropriate script based on your platform to determine the next sequence number:
+
+- **Bash**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --dry-run --short-name "<short-name>" "<feature description>"`
+- **PowerShell**: `.specify/extensions/git/scripts/powershell/create-new-feature.ps1 -Json -DryRun -ShortName "<short-name>" "<feature description>"`
+
+Use the `--dry-run` / `-DryRun` flag so the script computes the next number without creating the branch yet. Parse `FEATURE_NUM` from the JSON output.
+
+## Applying the Convention
+
+If `.specify/branch-convention.yml` was found and `branch_pattern` is set:
+
+1. Replace tokens in `branch_pattern` with their values:
+   - `{seq}`: zero-padded sequence number from `FEATURE_NUM` (pad to `seq_padding` digits, default 3)
+   - `{kebab}`: the short name generated above (already kebab-case)
+   - `{type}`: the value from `type_prefix` for `default_type` (e.g., if `default_type: feature` and `type_prefix.feature: "feature"`, use `"feature"`)
+2. Set `GIT_BRANCH_NAME` to the fully-expanded branch name (e.g., `feature/001-terraform-azure-workshop-infra`).
+3. Run the script again **without** `-DryRun`, passing `GIT_BRANCH_NAME` as an environment variable so the script creates the branch with that exact name:
+   - **Bash**: `GIT_BRANCH_NAME="<expanded-name>" .specify/extensions/git/scripts/bash/create-new-feature.sh --json --short-name "<short-name>" "<feature description>"`
+   - **PowerShell**: `$env:GIT_BRANCH_NAME="<expanded-name>"; .specify/extensions/git/scripts/powershell/create-new-feature.ps1 -Json -ShortName "<short-name>" "<feature description>"`
+
+If `.specify/branch-convention.yml` does not exist or has no `branch_pattern`, skip the dry-run step and run the script directly (original behavior):
 
 - **Bash**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --short-name "<short-name>" "<feature description>"`
 - **Bash (timestamp)**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --timestamp --short-name "<short-name>" "<feature description>"`
@@ -54,7 +82,7 @@ Run the appropriate script based on your platform:
 **IMPORTANT**:
 - Do NOT pass `--number` — the script determines the correct next number automatically
 - Always include the JSON flag (`--json` for Bash, `-Json` for PowerShell) so the output can be parsed reliably
-- You must only ever run this script once per feature
+- You must only ever run the branch-creating script call once per feature
 - The JSON output will contain `BRANCH_NAME` and `FEATURE_NUM`
 
 ## Graceful Degradation

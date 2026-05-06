@@ -1,0 +1,29 @@
+# Terraform state
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+
+# Terraform directory
+.terraform/
+.terraform.lock.hcl
+
+# Variable files with actual values — only the .example file is committed
+*.tfvars
+!*.tfvars.example
+
+# Plan files
+*.tfplan
+
+# Backend configuration (contains storage account details)
+backend.conf
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Crash log
+crash.log
+crash.*.log

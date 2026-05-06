@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/azuread"
       version = "~> 2.0"
     }
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
   }
 
   backend "azurerm" {}
@@ -33,6 +37,8 @@ provider "azurerm" {
 provider "azuread" {
   tenant_id = var.tenant_id
 }
+
+provider "azapi" {}
 
 locals {
   backend_api_user_impersonation_scope_id = uuidv5("url", "https://backend-api/scopes/user_impersonation")

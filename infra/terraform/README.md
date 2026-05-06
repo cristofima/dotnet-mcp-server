@@ -10,6 +10,14 @@ State is stored in Azure Blob Storage (remote backend).
 - An Entra ID tenant where you have permission to register applications
 - The bootstrap script run once to create the remote state backend
 
+## Providers
+
+| Provider | Source | Version |
+|---|---|---|
+| `azurerm` | `hashicorp/azurerm` | `~> 4.0` |
+| `azuread` | `hashicorp/azuread` | `~> 2.0` |
+| `azapi` | `azure/azapi` | `~> 2.0` |
+
 ## First-time Setup
 
 Run the bootstrap script before `terraform init`. It creates a resource group, storage account, and blob container for remote state, then writes `backend.conf`:
@@ -56,7 +64,7 @@ terraform apply -var-file=terraform.tfvars -auto-approve
 | `entra-id.tf` | 3 app registrations (`app-backend-api`, `app-mcp-server`, `app-foundry-agent`), 3 service principals, 2 app passwords |
 | `keyvault.tf` | Key Vault (`kv-<prefix>`), Secrets Officer role for the Terraform operator, 4 secrets |
 | `sql.tf` | SQL Server (`sql-<prefix>`), database (`db-backend-api`), firewall rule for Azure services |
-| `app-service.tf` | App Service Plan (`plan-<prefix>`, B1 Linux), 2 web apps, Key Vault Secrets User role for each app's managed identity |
+| `app-service.tf` | App Service Plan (`plan-<prefix>`, B1 Linux), 2 web apps with unique default hostnames (`<name>-<hash>.<region>.azurewebsites.net`), Key Vault Secrets User role for each app's managed identity |
 
 ## Outputs
 

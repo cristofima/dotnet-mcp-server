@@ -25,7 +25,13 @@ resource "azurerm_linux_web_app" "mcp_server" {
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.app_insights_conn_str.versionless_id})"
+    "EntraId__ClientId"                     = azuread_application.mcp_server.client_id
+    "EntraId__TenantId"                     = var.tenant_id
     "EntraId__ClientSecret"                 = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mcp_client_secret.versionless_id})"
+    "EntraId__Scopes__0"                    = "api://${azuread_application.mcp_server.client_id}/mcp.access"
+    "DownstreamApi__Audience"               = "api://${azuread_application.backend_api.client_id}"
+    "DownstreamApi__Scopes__0"              = "api://${azuread_application.backend_api.client_id}/.default"
+    "DownstreamApi__BaseUrl"                = "https://app-${var.prefix}-api.azurewebsites.net"
   }
 }
 
@@ -49,6 +55,8 @@ resource "azurerm_linux_web_app" "backend_api" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.main.instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.app_insights_conn_str.versionless_id})"
     "ConnectionStrings__Default"            = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.backend_api_sql_conn_str.versionless_id})"
+    "EntraId__Audience"                     = "api://${azuread_application.backend_api.client_id}"
+    "EntraId__TenantId"                     = var.tenant_id
   }
 }
 

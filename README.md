@@ -4,8 +4,8 @@ Reference implementation of a **Model Context Protocol (MCP) server** secured wi
 
 **Features**:
 
-- **8 MCP Tools**: task CRUD, project queries, balance inquiries, admin operations
-- **6 MCP Prompts**: templates for task/project analysis and compliance auditing
+- **8 MCP Tools**: task CRUD, project queries, balance inquiries, budget transfer
+- **4 MCP Prompts**: templates for task and project analysis
 - **OAuth 2.0 On-Behalf-Of (OBO)**: token exchange for downstream API calls
 - **Role-Based Access Control**: granular permissions via Entra ID App Roles
 
@@ -86,14 +86,14 @@ All required properties use `[Required]` DataAnnotations for early validation.
 | `update_task_status` | Update task status (Pending/In Progress/Completed) |
 | `delete_task`        | Delete a task by ID                                |
 
-### Backend API (Token Exchange)
+### Project & Balance (Token Exchange)
 
-| Tool                  | Description                         |
-| --------------------- | ----------------------------------- |
-| `get_projects`        | List all projects from Backend API  |
-| `get_project_details` | Get project details by ID           |
-| `get_project_balance` | Get financial balance for a project |
-| `get_backend_users`   | List users (admin only)             |
+| Tool                  | Description                                  |
+| --------------------- | -------------------------------------------- |
+| `get_projects`        | List all projects from Backend API           |
+| `get_project_details` | Get project details by ID                    |
+| `get_project_balance` | Get financial balance for a project          |
+| `transfer_budget`     | Transfer budget between projects (destructive) |
 
 ## MCP Prompts
 
@@ -113,49 +113,34 @@ Prompts are reusable templates that MCP clients invoke for structured analysis.
 | `analyze_project`  | Detailed analysis of a specific project | `projectId` (required) |
 | `compare_projects` | Compare all projects side-by-side       | (none)                 |
 
-### Administrative
-
-| Prompt                 | Description                          | Arguments |
-| ---------------------- | ------------------------------------ | --------- |
-| `compliance_checklist` | Generate compliance review checklist | (none)    |
-| `user_audit`           | Create user access audit report      | (none)    |
-
 For detailed tool parameters, prompt arguments, and per-tool authorization, see the [MCP Server project README](src/MCP-Server/README.md#tools-catalog).
 
 ## Authorization (App Roles)
 
-| Permission          | Description                | Typical Users                  |
-| ------------------- | -------------------------- | ------------------------------ |
-| `mcp:task:read`     | View tasks                 | All authenticated users        |
-| `mcp:task:write`    | Create/update/delete tasks | Supervisors, managers          |
-| `mcp:balance:read`  | View financial balances    | Tellers, supervisors, managers |
-| `mcp:balance:write` | Update balances            | Supervisors, managers          |
-| `mcp:project:read`  | View projects              | All authenticated users        |
-| `mcp:project:write` | Modify projects            | Managers only                  |
-| `mcp:admin:access`  | Admin operations           | Managers only                  |
+| Permission          | Description                    | Typical Users                  |
+| ------------------- | ------------------------------ | ------------------------------ |
+| `mcp:task:read`     | View tasks                     | All authenticated users        |
+| `mcp:task:write`    | Create/update/delete tasks     | Supervisors, managers          |
+| `mcp:balance:read`  | View financial balances        | Tellers, supervisors, managers |
+| `mcp:balance:write` | Transfer budget between projects | Supervisors, managers        |
+| `mcp:project:read`  | View projects                  | All authenticated users        |
+| `mcp:project:write` | Modify projects                | Managers only                  |
 
 **Quick Setup for Microsoft Entra ID**:
 
-1. Go to Azure Portal → App registrations → Your MCP Server app
+1. Go to Azure Portal → App registrations → your MCP Server app
 2. Navigate to **App roles** and create roles with these exact **Value** fields (including the `mcp:` prefix)
-3. Repeat for the Backend API app registration (required for OBO flow) using the values from `azure-config/mock-api-roles.json` (without `mcp:` prefix)
-4. Go to **Enterprise Applications** → Users and groups
-5. Assign users to roles in **both** Enterprise Apps
-6. Roles appear in the JWT `roles` claim automatically
-
-> **Note**: Roles must be defined in **both** app registrations (MCP Server and Backend API) for the OBO flow. The MCP Server uses `mcp:` prefixed values (e.g., `mcp:task:read`); the Backend API uses plain values (e.g., `task:read`). See `azure-config/mcp-server-roles.json` and `azure-config/mock-api-roles.json` as the source of truth for each registration.
+3. Repeat for the Backend API app registration (required for OBO flow) — use the plain values without `mcp:` prefix (e.g., `balance:write`)
+4. Go to **Enterprise Applications** → Users and groups and assign users to roles in **both** Enterprise Apps
+5. Roles appear in the JWT `roles` claim automatically
 
 ## Role Management in OBO Architecture
-
-### Role Duplication in OBO Architecture
 
 The OBO flow requires roles defined in **both** app registrations (MCP Server and Backend API). Adding a new permission involves:
 
 1. Define the App Role in both app registrations
 2. Add the constant to `Permissions.cs`
 3. Assign users/groups in both Enterprise Applications
-
-Use `azure-config/mcp-server-roles.json` and `azure-config/mock-api-roles.json` as the source of truth for role definitions.
 
 ## Token Exchange Flow
 
@@ -231,6 +216,22 @@ npx @modelcontextprotocol/inspector
 All Azure resources (App Service Plan, Web Apps, SQL Server, Key Vault, Application Insights, Entra ID app registrations) are defined in `infra/terraform/`. A single `terraform apply` provisions the full environment and sets all App Service application settings automatically — no manual portal configuration required.
 
 See [infra/terraform/README.md](infra/terraform/README.md) for setup, variables, and first-run instructions.
+
+### Foundry Agent Setup
+
+After `terraform apply`, register the MCP Server as a tool in [Microsoft Foundry](https://ai.azure.com) → your project → **Tools** → **Connect a tool** → **Custom MCP Server** → **OAuth2**. Use the following values (replace `<tenant_id>` with your Entra ID tenant ID):
+
+| Field | Value |
+| ----- | ----- |
+| Client ID | `foundry_agent_client_id` output |
+| Client Secret | `foundry-agent-client-secret` from Key Vault |
+| Scope | `api://<mcp_server_client_id>/mcp.access` |
+| MCP Server URL | `mcp_server_url` output + `/mcp` |
+| Token URL | `https://login.microsoftonline.com/<tenant_id>/oauth2/v2.0/token` |
+| Auth URL | `https://login.microsoftonline.com/<tenant_id>/oauth2/v2.0/authorize` |
+| Refresh URL | `https://login.microsoftonline.com/<tenant_id>/oauth2/v2.0/token` |
+
+After saving, copy the **Redirect URI** shown by the portal and add it to the `app-foundry-agent` app registration under **Authentication**.
 
 ### GitHub Actions Workflows
 

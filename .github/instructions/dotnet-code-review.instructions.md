@@ -1,7 +1,6 @@
 ---
 name: ".NET Code Review"
 description: "Code review checklist for .NET backend. Covers Clean Architecture, SOLID, DDD, security, performance, and testing standards."
-applyTo: "**/*.cs"
 ---
 
 # GitHub Copilot Code Review Instructions - .NET Backend

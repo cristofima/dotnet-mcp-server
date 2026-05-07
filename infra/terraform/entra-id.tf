@@ -3,7 +3,7 @@
 # No client secret and no app roles (FR-011, FR-014).
 resource "azuread_application" "backend_api" {
   display_name     = "app-backend-api"
-  sign_in_audience = "AzureADandPersonalMicrosoftAccount"
+  sign_in_audience = "AzureADMultipleOrgs"
 
   api {
     requested_access_token_version = 2
@@ -36,7 +36,7 @@ resource "azuread_application_identifier_uri" "backend_api" {
 # Exposes the mcp.access delegated scope and requires user_impersonation on the Backend API (FR-012).
 resource "azuread_application" "mcp_server" {
   display_name     = "app-mcp-server"
-  sign_in_audience = "AzureADandPersonalMicrosoftAccount"
+  sign_in_audience = "AzureADMultipleOrgs"
 
   api {
     requested_access_token_version = 2
@@ -84,7 +84,7 @@ resource "azuread_application_password" "mcp_server" {
 # Redirect URI is left empty and must be added manually after the Foundry project is created.
 resource "azuread_application" "agent" {
   display_name     = "app-foundry-agent"
-  sign_in_audience = "AzureADandPersonalMicrosoftAccount"
+  sign_in_audience = "AzureADMultipleOrgs"
 
   api {
     requested_access_token_version = 2
@@ -111,4 +111,41 @@ resource "azuread_service_principal" "agent" {
 resource "azuread_application_password" "agent" {
   application_id = azuread_application.agent.id
   display_name   = "Terraform-managed secret"
+}
+
+# azuread v2 and azapi v2 do not expose Microsoft Graph tokenLifetimePolicies natively.
+# We use terraform_data + local-exec (PowerShell + az CLI) to manage the policy via Graph API.
+# The provisioner is idempotent: it checks for an existing assignment before creating.
+# Triggers re-run whenever the MCP Server service principal is recreated.
+resource "terraform_data" "mcp_token_lifetime_policy" {
+  triggers_replace = [azuread_service_principal.mcp_server.object_id]
+
+  provisioner "local-exec" {
+    interpreter = ["pwsh", "-Command"]
+    command     = <<-EOT
+      $spId  = "${azuread_service_principal.mcp_server.object_id}"
+      $token = az account get-access-token --resource https://graph.microsoft.com/ --query accessToken -o tsv
+      $hdrs  = @{ Authorization = "Bearer $token"; "Content-Type" = "application/json" }
+
+      # Skip if a lifetime policy is already assigned to this SP
+      $cur = Invoke-RestMethod -Method GET `
+               -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$spId/tokenLifetimePolicies" `
+               -Headers $hdrs
+      if ($cur.value.Count -gt 0) { Write-Host "Token lifetime policy already assigned, skipping."; exit 0 }
+
+      # Create the 8-hour access token policy
+      $policyJson = '{"definition":["{\"TokenLifetimePolicy\":{\"Version\":1,\"AccessTokenLifetime\":\"08:00:00\"}}"],"displayName":"MCP Server - 8h access token","isOrganizationDefault":false}'
+      $policy = Invoke-RestMethod -Method POST `
+                  -Uri "https://graph.microsoft.com/v1.0/policies/tokenLifetimePolicies" `
+                  -Headers $hdrs -Body $policyJson
+      Write-Host "Token lifetime policy created: $($policy.id)"
+
+      # Assign the policy to the MCP Server service principal
+      $refJson = '{"@odata.id":"https://graph.microsoft.com/v1.0/policies/tokenLifetimePolicies/' + $policy.id + '"}'
+      Invoke-RestMethod -Method POST `
+        -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$spId/tokenLifetimePolicies/`$ref" `
+        -Headers $hdrs -Body $refJson
+      Write-Host "Policy assigned to SP $spId"
+    EOT
+  }
 }

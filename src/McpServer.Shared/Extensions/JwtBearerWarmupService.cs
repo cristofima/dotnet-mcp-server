@@ -1,18 +1,19 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
-namespace McpServer.Infrastructure.Identity;
+namespace McpServer.Shared.Extensions;
 
 /// <summary>
 /// Hosted service that pre-warms the JWT Bearer OIDC metadata on startup.
 /// Without this, the first authenticated request triggers a lazy download of
-/// the OpenID Connect discovery document, which can take several seconds and
-/// cause MCP initialization to time out.
+/// the OpenID Connect discovery document, which can take several seconds on
+/// cold starts and cause request timeouts.
 /// </summary>
-internal sealed class JwtBearerWarmupService : IHostedService
+public sealed class JwtBearerWarmupService : IHostedService
 {
     private readonly IOptionsMonitor<JwtBearerOptions> _jwtOptions;
     private readonly ILogger<JwtBearerWarmupService> _logger;

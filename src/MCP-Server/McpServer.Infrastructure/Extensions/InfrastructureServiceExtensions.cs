@@ -3,7 +3,7 @@ using McpServer.Application.Abstractions;
 using McpServer.Application.Configuration;
 using McpServer.Infrastructure.Health;
 using McpServer.Infrastructure.Http;
-using McpServer.Infrastructure.Identity;
+using McpServer.Shared.Extensions;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -52,7 +52,7 @@ public static class InfrastructureServiceExtensions
 #pragma warning restore EXTEXP0001
             .AddResilienceHandler("downstream-api", pipeline =>
             {
-                pipeline.AddTimeout(TimeSpan.FromSeconds(30));
+                pipeline.AddTimeout(TimeSpan.FromSeconds(60));
 
                 pipeline.AddRetry(new HttpRetryStrategyOptions
                 {

@@ -40,7 +40,7 @@ public static class InfrastructureServiceExtensions
             // that ServiceDefaults registers globally via ConfigureHttpClientDefaults. Without this call the custom
             // "downstream-api" pipeline below would stack INSIDE the standard one, allowing the outer pipeline to
             // retry a timed-out request up to 3 more times — incompatible with the M365 10–20 s budget.
-            // The custom pipeline caps total execution at 10 s with 1 retry and 300 ms jitter.
+            // The custom pipeline caps total execution at 60 s with 1 retry and 300 ms jitter.
             // EXTEXP0001: RemoveAllResilienceHandlers is experimental — suppressed intentionally.
 #pragma warning disable EXTEXP0001
             services.AddHttpClient<IDownstreamApiService, DownstreamApiService>((sp, client) =>

@@ -3,7 +3,6 @@ using McpServer.Shared.Configuration;
 using McpServer.Shared.Extensions;
 using McpServer.Shared.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Hosting;
 
 namespace McpServer.BackendApi.Extensions;
 

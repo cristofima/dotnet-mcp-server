@@ -1,5 +1,4 @@
-﻿using McpServer.Application.UseCases.Admin;
-using McpServer.Application.UseCases.Balances;
+﻿using McpServer.Application.UseCases.Balances;
 using McpServer.Application.UseCases.Projects;
 using McpServer.Application.UseCases.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,9 +29,7 @@ public static class ApplicationServiceExtensions
 
         // Balance use cases
         services.AddTransient<GetProjectBalanceUseCase>();
-
-        // Admin use cases
-        services.AddTransient<GetBackendUsersUseCase>();
+        services.AddTransient<TransferBudgetUseCase>();
 
         return services;
     }

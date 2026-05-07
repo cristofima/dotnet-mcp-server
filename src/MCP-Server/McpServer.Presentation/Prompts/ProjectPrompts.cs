@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using McpServer.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;
@@ -20,7 +19,6 @@ public sealed class ProjectPrompts
     /// </summary>
     [McpServerPrompt(Name = "analyze_project")]
     [Description("Creates a prompt instructing the LLM to analyze a project's details, status, and financial health.")]
-    [Authorize(Roles = Permissions.PROJECT_READ)]
     public ChatMessage AnalyzeProject(
         [Description("The unique identifier of the project to analyze.")]
         [Required]
@@ -50,7 +48,6 @@ public sealed class ProjectPrompts
     /// </summary>
     [McpServerPrompt(Name = "compare_projects")]
     [Description("Creates a prompt for the LLM to compare all projects and rank them by health indicators.")]
-    [Authorize(Roles = Permissions.PROJECT_READ)]
     public ChatMessage CompareProjects()
     {
         return new ChatMessage(ChatRole.User,

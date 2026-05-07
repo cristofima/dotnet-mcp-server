@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using McpServer.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;
@@ -19,7 +18,6 @@ public sealed class TaskPrompts
     /// </summary>
     [McpServerPrompt(Name = "summarize_tasks")]
     [Description("Creates a prompt instructing the LLM to summarize tasks. Optionally filter by status (Pending, In Progress, Completed).")]
-    [Authorize(Roles = Permissions.TASK_READ)]
     public ChatMessage SummarizeTasks(
         [Description("Optional status filter: Pending, In Progress, or Completed. Leave empty to summarize all tasks.")] string? status = null)
     {
@@ -47,7 +45,6 @@ public sealed class TaskPrompts
     /// </summary>
     [McpServerPrompt(Name = "analyze_task_priorities")]
     [Description("Creates a prompt for the LLM to analyze task priorities and provide recommendations for workload optimization.")]
-    [Authorize(Roles = Permissions.TASK_READ)]
     public ChatMessage AnalyzeTaskPriorities()
     {
         return new ChatMessage(ChatRole.User,

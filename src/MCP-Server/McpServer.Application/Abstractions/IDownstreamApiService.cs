@@ -55,7 +55,7 @@ public interface IDownstreamApiService
     Task<JsonElement> DeleteTaskAsync(string taskId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Gets all users (admin only).
+    /// Transfers budget from one project to another.
     /// </summary>
-    Task<JsonElement> GetUsersAsync(CancellationToken cancellationToken);
+    Task<JsonElement> TransferBudgetAsync(string sourceProjectId, string targetProjectId, decimal amount, CancellationToken cancellationToken);
 }

@@ -48,11 +48,9 @@ internal static class McpServerExtensions
                 .WithTools<TaskTools>()
                 .WithTools<ProjectsTools>()
                 .WithTools<BalancesTools>()
-                .WithTools<AdminTools>()
                 // Prompts
                 .WithPrompts<TaskPrompts>()
-                .WithPrompts<ProjectPrompts>()
-                .WithPrompts<AdminPrompts>();
+                .WithPrompts<ProjectPrompts>();
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using McpServer.Application.UseCases.Tasks;
-using McpServer.Domain.Constants;
 using McpServer.Domain.Rules;
 using Microsoft.AspNetCore.Authorization;
 using ModelContextProtocol.Server;
@@ -30,7 +29,6 @@ public sealed class TaskTools(
         Idempotent = true,
         OpenWorld = false)]
     [Description("Retrieves all tasks for the authenticated user. Returns task ID, title, description, priority (Low/Medium/High), status (Pending/In Progress/Completed), and timestamps.")]
-    [Authorize(Roles = Permissions.TASK_READ)]
     public async Task<string> GetTasksAsync(CancellationToken cancellationToken)
     {
         var result = await getTasksUseCase.ExecuteAsync(cancellationToken);
@@ -48,7 +46,6 @@ public sealed class TaskTools(
         Idempotent = false,
         OpenWorld = false)]
     [Description("Creates a new task with a title, description, and optional priority. Returns the created task with its generated ID.")]
-    [Authorize(Roles = Permissions.TASK_WRITE)]
     public async Task<string> CreateTaskAsync(
         [Description("The title of the task"), Required, MinLength(1), MaxLength(TaskRules.TitleMaxLength)] string title,
         [Description("A detailed description of the task"), Required, MinLength(1)] string description,
@@ -70,7 +67,6 @@ public sealed class TaskTools(
         Idempotent = true,
         OpenWorld = false)]
     [Description("Updates the status of an existing task. Valid statuses: 'Pending', 'In Progress', 'Completed'.")]
-    [Authorize(Roles = Permissions.TASK_WRITE)]
     public async Task<string> UpdateTaskStatusAsync(
         [Description("The unique ID of the task to update"), Required] string taskId,
         [Description("New status: 'Pending', 'In Progress', or 'Completed'"), Required] string status,
@@ -91,7 +87,6 @@ public sealed class TaskTools(
         Idempotent = true,
         OpenWorld = false)]
     [Description("Permanently deletes a task. This action cannot be undone.")]
-    [Authorize(Roles = Permissions.TASK_WRITE)]
     public async Task<string> DeleteTaskAsync(
         [Description("The unique ID of the task to delete"), Required] string taskId,
         CancellationToken cancellationToken)

@@ -15,10 +15,7 @@ public static class McpTelemetryFilter
     /// <summary>
     /// Data classification labels per tool. See McpServer.Presentation/README.md § Data Classification.
     /// </summary>
-    private static readonly Dictionary<string, string> ToolDataClassifications = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["get_backend_users"] = "sensitive",
-    };
+    private static readonly Dictionary<string, string> ToolDataClassifications = new(StringComparer.OrdinalIgnoreCase);
 
     public static McpRequestFilter<CallToolRequestParams, CallToolResult> Create()
     {

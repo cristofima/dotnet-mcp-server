@@ -15,7 +15,6 @@ public sealed class DownstreamApiService : AuthenticatedApiClient, IDownstreamAp
         public static string Projects { get; } = "/api/projects";
         public static string Balances { get; } = "/api/balances";
         public static string Tasks { get; } = "/api/tasks";
-        public static string AdminUsers { get; } = "/api/admin/users";
     }
 
     public DownstreamApiService(
@@ -34,9 +33,6 @@ public sealed class DownstreamApiService : AuthenticatedApiClient, IDownstreamAp
     public Task<JsonElement> GetBalanceAsync(string projectId, CancellationToken cancellationToken) =>
         GetAsync($"{Routes.Balances}/{projectId}", cancellationToken);
 
-    public Task<JsonElement> GetUsersAsync(CancellationToken cancellationToken) =>
-        GetAsync(Routes.AdminUsers, cancellationToken);
-
     public Task<JsonElement> GetTasksAsync(CancellationToken cancellationToken) =>
         GetAsync(Routes.Tasks, cancellationToken);
 
@@ -51,4 +47,7 @@ public sealed class DownstreamApiService : AuthenticatedApiClient, IDownstreamAp
 
     public Task<JsonElement> DeleteTaskAsync(string taskId, CancellationToken cancellationToken) =>
         DeleteAsync($"{Routes.Tasks}/{taskId}", cancellationToken);
+
+    public Task<JsonElement> TransferBudgetAsync(string sourceProjectId, string targetProjectId, decimal amount, CancellationToken cancellationToken) =>
+        PostAsync($"{Routes.Balances}/transfer", new { sourceProjectId, targetProjectId, amount }, cancellationToken);
 }

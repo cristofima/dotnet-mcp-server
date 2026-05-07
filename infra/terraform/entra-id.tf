@@ -25,6 +25,13 @@ resource "azuread_service_principal" "backend_api" {
   client_id = azuread_application.backend_api.client_id
 }
 
+# Application ID URI for backend_api: api://<client_id>
+# Set separately to avoid the self-reference circular dependency inside azuread_application.
+resource "azuread_application_identifier_uri" "backend_api" {
+  application_id = azuread_application.backend_api.id
+  identifier_uri = "api://${azuread_application.backend_api.client_id}"
+}
+
 # MCP Server app registration
 # Exposes the mcp.access delegated scope and requires user_impersonation on the Backend API (FR-012).
 resource "azuread_application" "mcp_server" {
@@ -58,6 +65,13 @@ resource "azuread_application" "mcp_server" {
 
 resource "azuread_service_principal" "mcp_server" {
   client_id = azuread_application.mcp_server.client_id
+}
+
+# Application ID URI for mcp_server: api://<client_id>
+# This is what consumers reference in scopes: api://<client_id>/mcp.access
+resource "azuread_application_identifier_uri" "mcp_server" {
+  application_id = azuread_application.mcp_server.id
+  identifier_uri = "api://${azuread_application.mcp_server.client_id}"
 }
 
 resource "azuread_application_password" "mcp_server" {

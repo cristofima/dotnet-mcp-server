@@ -62,7 +62,7 @@ terraform apply -var-file=terraform.tfvars -auto-approve
 | File | Resources |
 |---|---|
 | `main.tf` | Resource group, Log Analytics workspace, Application Insights |
-| `entra-id.tf` | 3 app registrations (`app-backend-api`, `app-mcp-server`, `app-foundry-agent`), 3 service principals, 2 app passwords |
+| `entra-id.tf` | 3 app registrations (`app-backend-api`, `app-mcp-server`, `app-foundry-agent`), Application ID URIs (`api://<client_id>`) for both backend and MCP apps, 3 service principals, 2 app passwords |
 | `keyvault.tf` | Key Vault (`kv-<prefix>`), Secrets Officer role for the Terraform operator, 4 secrets |
 | `sql.tf` | SQL Server (`sql-<prefix>`), database (`db-backend-api`), firewall rule for Azure services |
 | `app-service.tf` | App Service Plan (`plan-<prefix>`, B1 Linux), 2 web apps with unique default hostnames (`<name>-<hash>.<region>.azurewebsites.net`), Key Vault Secrets User role for each app's managed identity |

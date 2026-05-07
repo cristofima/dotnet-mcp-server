@@ -3,6 +3,7 @@ using McpServer.Application.Abstractions;
 using McpServer.Application.Configuration;
 using McpServer.Infrastructure.Health;
 using McpServer.Infrastructure.Http;
+using McpServer.Infrastructure.Identity;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -27,6 +28,10 @@ public static class InfrastructureServiceExtensions
             // Register Identity Provider services (MSAL client, token exchange, options)
             services.AddIdentityProvider(configuration);
 
+            // Pre-warm the JWT Bearer OIDC metadata at startup to avoid lazy-load delays
+            // on the first authenticated request (which would otherwise cause MCP initialization to time out).
+            services.AddHostedService<JwtBearerWarmupService>();
+
             // Register scoped token provider — extracts and OBO-exchanges the caller's token per request
             services.AddScoped<ApiTokenProvider>();
 
@@ -47,7 +52,7 @@ public static class InfrastructureServiceExtensions
 #pragma warning restore EXTEXP0001
             .AddResilienceHandler("downstream-api", pipeline =>
             {
-                pipeline.AddTimeout(TimeSpan.FromSeconds(10));
+                pipeline.AddTimeout(TimeSpan.FromSeconds(30));
 
                 pipeline.AddRetry(new HttpRetryStrategyOptions
                 {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace McpServer.BackendApi.Data.Migrations
+namespace McpServer.BackendApi.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -68,8 +68,7 @@ namespace McpServer.BackendApi.Data.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     Username = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastLogin = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)

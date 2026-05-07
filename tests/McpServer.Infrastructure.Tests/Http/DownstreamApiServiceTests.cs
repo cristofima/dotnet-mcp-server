@@ -152,18 +152,6 @@ public sealed class DownstreamApiServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetUsersAsync_Sends_GET_ToAdminUsersRoute()
-    {
-        _httpHandler.SetResponse("[]");
-        var service = CreateService();
-
-        await service.GetUsersAsync(CancellationToken.None);
-
-        Assert.Equal(HttpMethod.Get, _httpHandler.LastRequest!.Method);
-        Assert.Equal("/api/admin/users", _httpHandler.LastRequest.RequestUri!.AbsolutePath);
-    }
-
-    [Fact]
     public async Task CreateTaskAsync_Sends_POST_WithJsonBody()
     {
         _httpHandler.SetResponse("""{"id": "T1", "title": "New Task"}""");

@@ -68,10 +68,8 @@ internal static class TestServerBuilder
             .WithTools<TaskTools>()
             .WithTools<ProjectsTools>()
             .WithTools<BalancesTools>()
-            .WithTools<AdminTools>()
             .WithPrompts<TaskPrompts>()
-            .WithPrompts<ProjectPrompts>()
-            .WithPrompts<AdminPrompts>();
+            .WithPrompts<ProjectPrompts>();
 
         configureServices?.Invoke(builder.Services);
 
@@ -138,7 +136,6 @@ internal static class TestServerBuilder
 
         mock.Setup(x => x.GetTasksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(emptyArray);
         mock.Setup(x => x.GetProjectsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(emptyArray);
-        mock.Setup(x => x.GetUsersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(emptyArray);
         mock.Setup(x => x.GetProjectByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(emptyObject);
         mock.Setup(x => x.GetBalanceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(emptyObject);
         mock.Setup(x => x.GetTaskByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(emptyObject);

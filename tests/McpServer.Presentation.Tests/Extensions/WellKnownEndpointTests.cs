@@ -154,9 +154,7 @@ public sealed class WellKnownEndpointTests
         bool authenticated = true, CancellationToken cancellationToken = default)
     {
         var userName = authenticated ? "test-user" : null;
-        string[]? roles = authenticated
-            ? [McpServer.Domain.Constants.Permissions.TASK_READ]
-            : null;
+        string[]? roles = authenticated ? [] : null;
 
         return TestServerBuilder.StartAsync(
             userName,

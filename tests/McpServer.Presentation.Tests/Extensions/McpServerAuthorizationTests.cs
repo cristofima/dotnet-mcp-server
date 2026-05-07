@@ -1,93 +1,68 @@
-﻿using System.Net;
+using System.Net;
 using System.Text;
 using System.Text.Json;
-using McpServer.Domain.Constants;
 using McpServer.Presentation.Tests.Helpers;
 using Xunit;
 
 namespace McpServer.Presentation.Tests.Extensions;
 
 /// <summary>
-/// Integration tests that verify MCP tool registration, role-based authorization filtering,
-/// and prompt visibility. Starts a real Kestrel server per test with fake authentication
+/// Integration tests that verify MCP tool registration, authentication enforcement,
+/// and prompt visibility. Authorization is authentication-only — any authenticated user
+/// can see and invoke all tools and prompts.
+/// Starts a real Kestrel server per test with fake authentication
 /// that injects a ClaimsPrincipal via middleware (following the MCP SDK's own test pattern).
 /// </summary>
 public sealed class McpServerAuthorizationTests
 {
-    private static readonly string[] AllRoles =
-    [
-        Permissions.TASK_READ,
-        Permissions.TASK_WRITE,
-        Permissions.BALANCE_READ,
-        Permissions.BALANCE_WRITE,
-        Permissions.PROJECT_READ,
-        Permissions.PROJECT_WRITE,
-        Permissions.ADMIN_ACCESS,
-    ];
+    private const int ExpectedToolCount = 8;
+    private const int ExpectedPromptCount = 4;
 
     // --- Tool Registration ---
 
     [Fact]
-    public async Task ListTools_WithAllRoles_Returns_AllEightTools()
+    public async Task ListTools_Authenticated_Returns_AllTools()
     {
-        await using var env = await StartServerAsync("allroles-user", AllRoles, TestContext.Current.CancellationToken);
+        await using var env = await StartServerAsync("user", cancellationToken: TestContext.Current.CancellationToken);
 
         var tools = await env.Client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal(8, tools.Count);
-    }
-
-    // --- Tool Authorization Filtering ---
-
-    [Fact]
-    public async Task ListTools_WithTaskReadOnly_Returns_OnlyGetTasks()
-    {
-        await using var env = await StartServerAsync("reader", [Permissions.TASK_READ], TestContext.Current.CancellationToken);
-
-        var tools = await env.Client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Single(tools);
-        Assert.Equal("get_tasks", tools[0].Name);
+        Assert.Equal(ExpectedToolCount, tools.Count);
     }
 
     [Fact]
-    public async Task ListTools_WithNoRoles_Returns_NoTools()
+    public async Task ListTools_Authenticated_Includes_TransferBudget()
     {
-        await using var env = await StartServerAsync("noroles-user", [], TestContext.Current.CancellationToken);
+        await using var env = await StartServerAsync("user", cancellationToken: TestContext.Current.CancellationToken);
 
         var tools = await env.Client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Empty(tools);
+        Assert.Contains(tools, t => t.Name == "transfer_budget");
     }
-
-    public static TheoryData<string, int, string[]> RoleToolMappings => new()
-    {
-        { Permissions.TASK_WRITE, 3, ["create_task", "delete_task", "update_task_status"] },
-        { Permissions.PROJECT_READ, 2, ["get_project_details", "get_projects"] },
-        { Permissions.BALANCE_READ, 1, ["get_project_balance"] },
-        { Permissions.ADMIN_ACCESS, 1, ["get_backend_users"] },
-    };
-
-    [Theory]
-    [MemberData(nameof(RoleToolMappings))]
-    public async Task ListTools_PerRole_Returns_CorrectToolSubset(
-        string role, int expectedCount, string[] expectedToolNames)
-    {
-        await using var env = await StartServerAsync("user", [role], TestContext.Current.CancellationToken);
-
-        var tools = await env.Client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Equal(expectedCount, tools.Count);
-        var actualNames = tools.Select(t => t.Name).Order().ToArray();
-        Assert.Equal(expectedToolNames, actualNames);
-    }
-
-    // --- Tool Invocation Authorization ---
 
     [Fact]
-    public async Task CallTool_WithCorrectRole_Returns_SuccessResponse()
+    public async Task ListTools_Authenticated_Includes_AllExpectedToolNames()
     {
-        await using var env = await StartServerAsync("reader", [Permissions.TASK_READ], TestContext.Current.CancellationToken);
+        await using var env = await StartServerAsync("user", cancellationToken: TestContext.Current.CancellationToken);
+
+        var tools = await env.Client!.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var names = tools.Select(t => t.Name).Order().ToArray();
+
+        Assert.Equal(
+            new[]
+            {
+                "create_task", "delete_task", "get_project_balance",
+                "get_project_details", "get_projects", "get_tasks", "transfer_budget", "update_task_status"
+            },
+            names);
+    }
+
+    // --- Tool Invocation ---
+
+    [Fact]
+    public async Task CallTool_Authenticated_Returns_SuccessResponse()
+    {
+        await using var env = await StartServerAsync("user", cancellationToken: TestContext.Current.CancellationToken);
 
         var result = await env.Client!.CallToolAsync("get_tasks", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -95,38 +70,16 @@ public sealed class McpServerAuthorizationTests
         Assert.NotEmpty(result.Content);
     }
 
-    [Fact]
-    public async Task CallTool_WithWrongRole_IsRejected()
-    {
-        await using var env = await StartServerAsync("reader", [Permissions.TASK_READ], TestContext.Current.CancellationToken);
-
-        // get_backend_users requires ADMIN_ACCESS, not TASK_READ
-        await Assert.ThrowsAnyAsync<Exception>(
-            () => env.Client!.CallToolAsync("get_backend_users", cancellationToken: TestContext.Current.CancellationToken).AsTask());
-    }
-
-    // --- Prompt Authorization Filtering ---
+    // --- Prompt Visibility ---
 
     [Fact]
-    public async Task ListPrompts_WithAllRoles_Returns_AllSixPrompts()
+    public async Task ListPrompts_Authenticated_Returns_AllPrompts()
     {
-        await using var env = await StartServerAsync("allroles-user", AllRoles, TestContext.Current.CancellationToken);
+        await using var env = await StartServerAsync("user", cancellationToken: TestContext.Current.CancellationToken);
 
         var prompts = await env.Client!.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal(6, prompts.Count);
-    }
-
-    [Fact]
-    public async Task ListPrompts_WithTaskReadOnly_Returns_OnlyTaskPrompts()
-    {
-        await using var env = await StartServerAsync("reader", [Permissions.TASK_READ], TestContext.Current.CancellationToken);
-
-        var prompts = await env.Client!.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Equal(2, prompts.Count);
-        var names = prompts.Select(p => p.Name).Order().ToArray();
-        Assert.Equal(new[] { "analyze_task_priorities", "summarize_tasks" }, names);
+        Assert.Equal(ExpectedPromptCount, prompts.Count);
     }
 
     // --- Unauthenticated Access ---
@@ -171,9 +124,9 @@ public sealed class McpServerAuthorizationTests
     }
 
     [Fact]
-    public async Task PostOnlyFlow_InitializeAndListTools_ReturnsExpectedToolSubset()
+    public async Task PostOnlyFlow_InitializeAndListTools_ReturnsAllTools()
     {
-        await using var env = await StartServerAsync("copilot-user", [Permissions.TASK_READ], TestContext.Current.CancellationToken);
+        await using var env = await StartServerAsync("copilot-user", cancellationToken: TestContext.Current.CancellationToken);
 
         using var httpClient = new HttpClient();
 
@@ -204,14 +157,13 @@ public sealed class McpServerAuthorizationTests
         var listToolsResult = await ReadJsonRpcResultAsync(listToolsResponse, TestContext.Current.CancellationToken);
         Assert.True(listToolsResult.TryGetProperty("tools", out var tools));
         Assert.Equal(JsonValueKind.Array, tools.ValueKind);
-        Assert.Single(tools.EnumerateArray().ToList());
-        Assert.Equal("get_tasks", tools[0].GetProperty("name").GetString());
+        Assert.Equal(ExpectedToolCount, tools.EnumerateArray().Count());
     }
 
     [Fact]
-    public async Task GetPlusPostFlow_InitializeAndListTools_ReturnsExpectedToolSubset()
+    public async Task GetPlusPostFlow_InitializeAndListTools_ReturnsAllTools()
     {
-        await using var env = await StartServerAsync("vscode-user", [Permissions.TASK_READ], TestContext.Current.CancellationToken);
+        await using var env = await StartServerAsync("vscode-user", cancellationToken: TestContext.Current.CancellationToken);
 
         using var httpClient = new HttpClient();
 
@@ -254,8 +206,7 @@ public sealed class McpServerAuthorizationTests
         var listToolsResult = await ReadJsonRpcResultAsync(listToolsResponse, TestContext.Current.CancellationToken);
         Assert.True(listToolsResult.TryGetProperty("tools", out var tools));
         Assert.Equal(JsonValueKind.Array, tools.ValueKind);
-        Assert.Single(tools.EnumerateArray().ToList());
-        Assert.Equal("get_tasks", tools[0].GetProperty("name").GetString());
+        Assert.Equal(ExpectedToolCount, tools.EnumerateArray().Count());
     }
 
     // --- Server Setup ---
@@ -332,3 +283,5 @@ public sealed class McpServerAuthorizationTests
         CancellationToken cancellationToken = default)
         => TestServerBuilder.StartAsync(userName, roles, cancellationToken: cancellationToken);
 }
+
+

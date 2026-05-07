@@ -4,16 +4,19 @@ using McpServer.BackendApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace McpServer.BackendApi.Data.Migrations
+namespace McpServer.BackendApi.Migrations
 {
     [DbContext(typeof(MockApiDbContext))]
-    partial class MockApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507011246_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,10 +155,7 @@ namespace McpServer.BackendApi.Data.Migrations
             modelBuilder.Entity("McpServer.BackendApi.Data.Entities.UserEntity", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTimeOffset>("LastLogin")
                         .HasColumnType("datetimeoffset");

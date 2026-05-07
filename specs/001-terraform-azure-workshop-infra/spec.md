@@ -148,7 +148,7 @@ Workshop operators can collaborate on the same Terraform state without conflicts
 - The storage account and container for Terraform remote state are created manually before the first `terraform init`; the Terraform configuration does not provision or depend on them as resources.
 - The SQL admin username and password are provided as sensitive Terraform variables and are never stored in version control.
 - The Foundry OAuth Passthrough app registration redirect URI (e.g., `https://<project>.services.ai.azure.com/...`) cannot be known at apply time and is explicitly documented as a manual post-provisioning step.
-- All resources are deployed to a single Azure region, specified as a Terraform variable (default: `westeurope`).
+- All resources are deployed to a single Azure region, specified as a Terraform variable (default: `centralus`).
 - The configuration targets a single environment (production); multi-environment support (dev/staging/prod) is out of scope.
 - Provider versions: `azurerm` ≥ 4.0 and `azuread` ≥ 3.0 are required for compatibility with the APIs used.
 - The `azurerm` provider uses the `azurerm` features block with `key_vault { purge_soft_deleted_on_destroy = true, recover_soft_deleted_key_vaults = true }` to ensure Key Vault is fully purged on destroy and recoverable on re-apply within the same session.

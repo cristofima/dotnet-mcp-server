@@ -1,11 +1,11 @@
 output "mcp_server_url" {
   description = "MCP Server public HTTPS URL."
-  value       = "https://${azurerm_linux_web_app.mcp_server.default_hostname}"
+  value       = "https://${azapi_resource.mcp_server.output.properties.defaultHostName}"
 }
 
 output "backend_api_url" {
   description = "Backend API public HTTPS URL."
-  value       = "https://${azurerm_linux_web_app.backend_api.default_hostname}"
+  value       = "https://${azapi_resource.backend_api.output.properties.defaultHostName}"
 }
 
 output "app_insights_connection_string" {

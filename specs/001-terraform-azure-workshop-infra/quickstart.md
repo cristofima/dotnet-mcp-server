@@ -90,7 +90,7 @@ Edit `terraform.tfvars`:
 ```hcl
 tenant_id        = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"   # Your Entra ID tenant ID
 subscription_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"   # Your Azure subscription ID
-location         = "westeurope"                              # Azure region
+location         = "centralus"                              # Azure region
 
 sql_admin_username = "sqladmin"
 sql_admin_password = "YourSecure@Password1"                  # Min 8 chars; uppercase, lowercase, digit, special char

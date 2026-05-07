@@ -51,3 +51,6 @@ jobs:
         with:
           app-name: ${{ vars.AZURE_BACKEND_API_APP_NAME }}
           package: ./publish
+
+      - name: Restart App Service
+        run: az webapp restart --name ${{ vars.AZURE_BACKEND_API_APP_NAME }} --resource-group ${{ vars.AZURE_RESOURCE_GROUP }}

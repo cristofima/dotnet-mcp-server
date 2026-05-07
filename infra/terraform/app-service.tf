@@ -34,6 +34,7 @@ resource "azapi_resource" "mcp_server" {
           { name = "DownstreamApi__Audience", value = "api://${azuread_application.backend_api.client_id}" },
           { name = "DownstreamApi__Scopes__0", value = "api://${azuread_application.backend_api.client_id}/.default" },
           { name = "DownstreamApi__BaseUrl", value = "https://${azapi_resource.backend_api.output.properties.defaultHostName}" },
+          { name = "EntraId__ResourceDocumentation", value = "https://github.com/cristofima/dotnet-mcp-server" },
         ]
       }
     }

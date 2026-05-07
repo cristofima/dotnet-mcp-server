@@ -42,7 +42,11 @@ public static class AuthenticationExtensions
                     options.RequireHttpsMetadata = !environment.IsDevelopment();
 
                     var tvp = entraIdOptions.BuildTokenValidationParameters();
-                    tvp.ValidAudience = entraIdOptions.Audience;
+                    // Accept both api://<client-id> and plain <client-id> (GUID) audience forms.
+                    // Entra ID v2 may issue either depending on whether the identifier URI was set
+                    // at the time MSAL cached the OBO token.
+                    var clientId = entraIdOptions.Audience.Replace("api://", string.Empty, StringComparison.OrdinalIgnoreCase);
+                    tvp.ValidAudiences = [$"api://{clientId}", clientId];
                     options.TokenValidationParameters = tvp;
                     options.Events = JwtBearerEventFactory.Create("EntraId");
                 });

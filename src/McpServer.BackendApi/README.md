@@ -178,8 +178,6 @@ cd McpServer.BackendApi
 dotnet run
 ```
 
-Requires Microsoft Entra ID configured with appropriate App Roles. See `docs/ENTRA-ID-TESTING-GUIDE.md` for setup instructions.
-
 ## File Structure
 
 ```
@@ -225,6 +223,7 @@ McpServer.BackendApi/
 ├── Telemetry/
 │   ├── ApiActivitySource.cs       # OpenTelemetry ActivitySource for MockAPI backend operations
 │   └── ApiMetrics.cs              # OpenTelemetry Metrics for MockAPI backend operations
+├── Migrations/                    # EF Core migrations (InitialCreate, DropUsersTable)
 ├── Program.cs                     # Entry point with DI and EF Core setup
 ├── appsettings.json               # Entra ID config
 ├── appsettings.Development.json

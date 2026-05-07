@@ -25,7 +25,7 @@ Defined in `variables.tf`.
 |---|---|---|---|---|---|
 | `tenant_id` | `string` | No | — | Yes | Entra ID tenant ID (GUID) |
 | `subscription_id` | `string` | No | — | Yes | Azure subscription ID (GUID) |
-| `location` | `string` | No | `"westeurope"` | No | Azure region for all resources |
+| `location` | `string` | No | `"centralus"` | No | Azure region for all resources |
 | `sql_admin_username` | `string` | Yes | — | Yes | SQL Server administrator login |
 | `sql_admin_password` | `string` | Yes | — | Yes | SQL Server administrator password |
 | `dotnet_version` | `string` | No | `"10.0"` | No | .NET stack version for App Services. Requires azurerm ~> 4.0 (current). |

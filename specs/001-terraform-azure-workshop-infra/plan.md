@@ -13,7 +13,7 @@ Provision the complete Azure infrastructure for the MCP Server OAuth2 Security B
 **Primary Dependencies**: `azurerm ~> 3.0` (Azure infrastructure), `azuread ~> 2.0` (Entra ID / identity)  
 **Storage**: Azure Blob Storage (remote state only; pre-created manually before `terraform init`)  
 **Testing**: `terraform validate`, `terraform fmt -check`, manual `terraform plan` review before apply  
-**Target Platform**: Azure cloud — single region (`westeurope` default), single resource group (`mcp-server-baseline`)  
+**Target Platform**: Azure cloud — single region (`centralus` default), single resource group (`mcp-server-baseline`)  
 **Project Type**: Infrastructure as Code (IaC) — Terraform root module, flat file layout, no child modules  
 **Performance Goals**: N/A — infrastructure provisioning is one-time; no runtime throughput requirements  
 **Constraints**: B1 App Service Plan tier; no child modules; `purge_protection_enabled = false` on Key Vault; azuread ~2.x attribute naming (see [research.md](research.md))  

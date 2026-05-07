@@ -25,7 +25,7 @@ These are the values that must be supplied via `terraform.tfvars` or `-var` flag
 
 | Variable | Type | Default | Notes |
 |---|---|---|---|
-| `location` | `string` | `"westeurope"` | Any valid Azure region identifier |
+| `location` | `string` | `"centralus"` | Any valid Azure region identifier |
 | `dotnet_version` | `string` | `"10.0"` | App Service application stack version (azurerm ~> 4.0 required) |
 
 ### Example `terraform.tfvars.example`
@@ -36,7 +36,7 @@ These are the values that must be supplied via `terraform.tfvars` or `-var` flag
 
 tenant_id        = "<your-entra-id-tenant-id>"
 subscription_id  = "<your-azure-subscription-id>"
-location         = "westeurope"
+location         = "centralus"
 
 sql_admin_username = "sqladmin"
 sql_admin_password = "<your-secure-sql-password>"

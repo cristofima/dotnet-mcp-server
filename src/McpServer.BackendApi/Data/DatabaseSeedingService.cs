@@ -17,14 +17,26 @@ public sealed class DatabaseSeedingService(
     {
         logger.LogInformation("Applying migrations and seeding demo data...");
 
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<MockApiDbContext>();
+        try
+        {
+            using var scope = serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<MockApiDbContext>();
 
-        await context.Database.MigrateAsync(cancellationToken);
+            await context.Database.MigrateAsync(cancellationToken);
 
-        await Task.Run(() => DbSeeder.SeedData(context), cancellationToken);
+            await Task.Run(() => DbSeeder.SeedData(context), cancellationToken);
 
-        logger.LogInformation("Database ready");
+            logger.LogInformation("Database ready");
+        }
+        catch (Exception ex)
+        {
+            // Log the failure but do not re-throw — a seeding failure must not prevent the
+            // application from starting. The health probe (/alive) must remain reachable so
+            // App Service keeps the instance alive and does not enter a crash loop.
+            // The most common cause in production is a transient Key Vault / managed-identity
+            // resolution delay immediately after a deployment or role-assignment change.
+            logger.LogError(ex, "Database migration/seeding failed at startup. The application will continue running, but data may be unavailable until the next restart.");
+        }
     }
 
     /// <summary>No-op — seeding is a startup-only concern.</summary>

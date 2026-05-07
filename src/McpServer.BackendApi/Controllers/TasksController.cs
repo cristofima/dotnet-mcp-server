@@ -2,7 +2,6 @@
 using McpServer.BackendApi.Models;
 using McpServer.BackendApi.Models.Responses;
 using McpServer.BackendApi.Services;
-using McpServer.BackendApi.Constants;
 using McpServer.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,7 +33,6 @@ public sealed class TasksController : ControllerBase
     /// Gets all tasks for the authenticated user.
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = Permissions.TASK_READ)]
     public async Task<IActionResult> GetTasksAsync(CancellationToken cancellationToken)
     {
         var userId = User.GetUserName();
@@ -52,7 +50,6 @@ public sealed class TasksController : ControllerBase
     /// Gets a specific task by ID.
     /// </summary>
     [HttpGet("{taskId}")]
-    [Authorize(Roles = Permissions.TASK_READ)]
     public async Task<IActionResult> GetTaskByIdAsync(string taskId, CancellationToken cancellationToken)
     {
         var userId = User.GetUserName();
@@ -72,7 +69,6 @@ public sealed class TasksController : ControllerBase
     /// Creates a new task.
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = Permissions.TASK_WRITE)]
     public async Task<IActionResult> CreateTaskAsync([FromBody] CreateTaskRequest request, CancellationToken cancellationToken)
     {
         var userId = User.GetUserName();
@@ -97,7 +93,6 @@ public sealed class TasksController : ControllerBase
     /// Updates the status of a task.
     /// </summary>
     [HttpPatch("{taskId}/status")]
-    [Authorize(Roles = Permissions.TASK_WRITE)]
     public async Task<IActionResult> UpdateTaskStatusAsync(string taskId, [FromBody] UpdateTaskStatusRequest request, CancellationToken cancellationToken)
     {
         var userId = User.GetUserName();
@@ -122,7 +117,6 @@ public sealed class TasksController : ControllerBase
     /// Deletes a task.
     /// </summary>
     [HttpDelete("{taskId}")]
-    [Authorize(Roles = Permissions.TASK_WRITE)]
     public async Task<IActionResult> DeleteTaskAsync(string taskId, CancellationToken cancellationToken)
     {
         var userId = User.GetUserName();

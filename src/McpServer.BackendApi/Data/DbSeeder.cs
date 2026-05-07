@@ -1,5 +1,4 @@
 ﻿using McpServer.BackendApi.Data.Entities;
-using McpServer.BackendApi.Constants;
 
 namespace McpServer.BackendApi.Data;
 
@@ -19,7 +18,6 @@ public static class DbSeeder
     {
         SeedTasks(context);
         SeedProjects(context);
-        SeedUsers(context);
         SeedBalances(context);
         context.SaveChanges();
     }
@@ -111,41 +109,6 @@ public static class DbSeeder
         };
 
         context.Projects.AddRange(projects);
-    }
-
-    private static void SeedUsers(MockApiDbContext context)
-    {
-        if (context.Users.Any())
-        {
-            return;
-        }
-
-        var users = new[]
-        {
-            new UserEntity
-            {
-                Id = 1,
-                Username = "demo-user",
-                Role = $"{Permissions.TASK_READ}, {Permissions.PROJECT_READ}",
-                LastLogin = SeedDate.AddDays(-1),
-            },
-            new UserEntity
-            {
-                Id = 2,
-                Username = "admin-user",
-                Role = Permissions.ADMIN_ACCESS,
-                LastLogin = SeedDate.AddHours(-3),
-            },
-            new UserEntity
-            {
-                Id = 3,
-                Username = "editor-user",
-                Role = $"{Permissions.TASK_READ}, {Permissions.TASK_WRITE}, {Permissions.BALANCE_READ}",
-                LastLogin = SeedDate.AddDays(-5),
-            },
-        };
-
-        context.Users.AddRange(users);
     }
 
     private static void SeedBalances(MockApiDbContext context)

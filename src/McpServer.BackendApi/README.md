@@ -70,17 +70,7 @@ MockApi **only accepts** tokens with `aud: api://{api-client-id}`. Tokens are is
 
 ## Authorization
 
-Controllers use **role-based authorization** directly with **granular permissions** (App Roles) via `[Authorize(Roles = Permissions.XXX)]`:
-
-| Permission     | Controllers/Endpoints                                                                         |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| `task:read`    | TasksController (GET `/api/tasks`, GET `/api/tasks/{id}`)                                     |
-| `task:write`   | TasksController (POST `/api/tasks`, PATCH `/api/tasks/{id}/status`, DELETE `/api/tasks/{id}`) |
-| `project:read` | ProjectsController (All endpoints: `/api/projects/*`)                                         |
-| `balance:read` | BalancesController (GET `/api/balances/{projectNumber}`)                                      |
-| `admin:access` | AdminController (All endpoints: `/api/admin/*`)                                               |
-
-These permissions are extracted from the JWT `roles` claim and must be configured as **App Roles** in the Entra ID application registration. See `docs/PERMISSION-SETUP-GUIDE.md` for complete configuration instructions.
+All controllers use **authentication-only** authorization (`[Authorize]`). Any valid JWT bearer token is sufficient — no App Roles or scope policies are required. The JWT must have the correct audience (`api://{api-client-id}`) and be issued by the configured Entra ID tenant.
 
 ## Endpoints
 
@@ -92,17 +82,17 @@ These permissions are extracted from the JWT `roles` claim and must be configure
 
 ### Authenticated
 
-| Method | Path                            | Required Role  | Description           |
-| ------ | ------------------------------- | -------------- | --------------------- |
-| GET    | `/api/projects`                 | `project:read` | List all projects     |
-| GET    | `/api/projects/{id}`            | `project:read` | Get project details   |
-| GET    | `/api/balances/{projectNumber}` | `balance:read` | Get financial balance |
-| GET    | `/api/admin/users`              | `admin:access` | List users            |
-| GET    | `/api/tasks`                    | `task:read`    | List all tasks        |
-| GET    | `/api/tasks/{id}`               | `task:read`    | Get task by ID        |
-| POST   | `/api/tasks`                    | `task:write`   | Create new task       |
-| PATCH  | `/api/tasks/{id}/status`        | `task:write`   | Update task status    |
-| DELETE | `/api/tasks/{id}`               | `task:write`   | Delete task           |
+| Method | Path                            | Description                         |
+| ------ | ------------------------------- | ----------------------------------- |
+| GET    | `/api/projects`                 | List all projects                   |
+| GET    | `/api/projects/{id}`            | Get project details                 |
+| GET    | `/api/balances/{projectNumber}` | Get financial balance               |
+| POST   | `/api/balances/transfer`        | Transfer budget between projects    |
+| GET    | `/api/tasks`                    | List all tasks                      |
+| GET    | `/api/tasks/{id}`               | Get task by ID                      |
+| POST   | `/api/tasks`                    | Create new task                     |
+| PATCH  | `/api/tasks/{id}/status`        | Update task status                  |
+| DELETE | `/api/tasks/{id}`               | Delete task                         |
 
 ### Sample Responses
 
@@ -195,24 +185,21 @@ Requires Microsoft Entra ID configured with appropriate App Roles. See `docs/ENT
 ```
 McpServer.BackendApi/
 ├── Controllers/
-│   ├── AdminController.cs         # Admin-only operations (/api/admin/*)
-│   ├── BalancesController.cs      # Balance queries (/api/balances/*)
+│   ├── BalancesController.cs      # Balance queries + budget transfer (/api/balances/*)
 │   ├── ProjectsController.cs      # Project operations (/api/projects/*)
 │   └── TasksController.cs         # Task CRUD operations (/api/tasks/*)
 ├── Data/
-│   ├── MockApiDbContext.cs        # EF Core DbContext (SQL Server): Tasks, Projects, Users, Balances
-│   ├── DbSeeder.cs                # Seeds demo data with fixed timestamps (tasks, projects, users, balances)
+│   ├── MockApiDbContext.cs        # EF Core DbContext (SQL Server): Tasks, Projects, Balances
+│   ├── DbSeeder.cs                # Seeds demo data with fixed timestamps (tasks, projects, balances)
 │   ├── DatabaseSeedingService.cs  # IHostedService: seeds demo data at startup
 │   ├── Entities/
 │   │   ├── TaskEntity.cs          # Task entity
 │   │   ├── ProjectEntity.cs       # Project entity
-│   │   ├── UserEntity.cs          # User entity
 │   │   └── BalanceEntity.cs       # Balance entity per project
 │   └── EntityConfigurations/
 │   │   ├── TaskEntityConfiguration.cs     # Fluent API: key, column lengths, indexes
 │   │   ├── ProjectEntityConfiguration.cs  # Fluent API: key, column lengths, index
-│   │   ├── BalanceEntityConfiguration.cs  # Fluent API: key, column length, index
-│   │   └── UserEntityConfiguration.cs     # Fluent API: key, column lengths
+│   │   └── BalanceEntityConfiguration.cs  # Fluent API: key, column length, index
 ├── Configuration/
 │   └── EntraIdApiOptions.cs       # Entra ID config for MockApi (inherits EntraIdBaseOptions from Shared)
 ├── Extensions/
@@ -221,8 +208,8 @@ McpServer.BackendApi/
 │   └── ApiTelemetryFilter.cs       # Action Filter for creating spans around controller actions
 ├── Models/
 │   ├── TaskModels.cs              # Task request models (CreateTask, UpdateStatus)
+│   ├── TransferRequest.cs         # Budget transfer request model (SourceProjectId, TargetProjectId, Amount)
 │   └── Responses/
-│       ├── AdminResponses.cs      # Admin DTOs (UserInfo, AdminConfigMetadata)
 │       ├── ApiResponse.cs         # Generic response wrappers (ApiResponse, ApiListResponse)
 │       ├── BalanceResponses.cs    # Balance DTOs (BalanceDetails, BalanceMetadata)
 │       ├── CommonResponses.cs     # Shared response types
@@ -233,10 +220,8 @@ McpServer.BackendApi/
 │   ├── TaskService.cs             # EF Core task CRUD operations
 │   ├── IProjectService.cs         # Project service interface
 │   ├── ProjectService.cs          # EF Core project queries
-│   ├── IUserService.cs            # User service interface
-│   ├── UserService.cs             # EF Core user queries
 │   ├── IBalanceService.cs         # Balance service interface
-│   └── BalanceService.cs          # EF Core balance queries
+│   └── BalanceService.cs          # EF Core balance queries + TransferAsync
 ├── Telemetry/
 │   ├── ApiActivitySource.cs       # OpenTelemetry ActivitySource for MockAPI backend operations
 │   └── ApiMetrics.cs              # OpenTelemetry Metrics for MockAPI backend operations
@@ -252,7 +237,7 @@ McpServer.BackendApi/
 
 ### Design Decisions
 
-- **EF Core SQL Server**: relational store backed by `(localdb)\mssqllocaldb` in development and Azure SQL in production. EF Core SQL Server spans are captured by `AddEntityFrameworkCoreInstrumentation()` and visible in both the Aspire Dashboard and Azure Monitor.
+- **EF Core SQL Server**: relational store backed by `(localdb)\mssqllocaldb` in development and Azure SQL in production. Three tables: `Tasks`, `Projects`, `Balances`. EF Core SQL Server spans are captured by `AddEntityFrameworkCoreInstrumentation()` and visible in both the Aspire Dashboard and Azure Monitor.
 - **Fluent API over Data Annotations**: all schema constraints (column lengths, decimal precision, indexes, keys) are centralized in `EntityConfigurations/` via `IEntityTypeConfiguration<T>` and auto-applied via `ApplyConfigurationsFromAssembly()`. Entities are clean POCOs with no persistence concerns.
 - **`DatabaseSeedingService`**: `IHostedService` that runs `MigrateAsync()` then `DbSeeder.SeedData()` sequentially before the app starts accepting requests. This applies any pending migrations and guarantees tables exist before any controller handles a request.
 - **`DbSeeder` is idempotent**: each seed method checks whether data already exists before inserting, so restarting the app does not duplicate rows.

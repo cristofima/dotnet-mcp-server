@@ -1,6 +1,5 @@
 ﻿using McpServer.BackendApi.Models.Responses;
 using McpServer.BackendApi.Services;
-using McpServer.BackendApi.Constants;
 using McpServer.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +11,7 @@ namespace McpServer.BackendApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = Permissions.PROJECT_READ)]
+[Authorize]
 public sealed class ProjectsController : ControllerBase
 {
     private readonly IProjectService _projectService;

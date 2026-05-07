@@ -28,11 +28,6 @@ public record ApiListResponse<TItem, TMetadata>(
 public record ListMetadata(int Count);
 
 /// <summary>
-/// Metadata for admin list responses with admin context.
-/// </summary>
-public record AdminListMetadata(int Count, bool IsAdmin);
-
-/// <summary>
 /// Empty metadata for responses that don't need context.
 /// Used as a type marker in <see cref="ApiResponse{TData, TMetadata}"/> when no metadata is needed.
 /// </summary>

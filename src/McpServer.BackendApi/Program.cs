@@ -51,7 +51,6 @@ builder.Services.AddSingleton(TimeProvider.System);
 // Register application services
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBalanceService, BalanceService>();
 
 var app = builder.Build();

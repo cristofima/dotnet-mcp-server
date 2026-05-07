@@ -16,7 +16,6 @@ public sealed class MockApiDbContext : DbContext
 
     public DbSet<TaskEntity> Tasks => Set<TaskEntity>();
     public DbSet<ProjectEntity> Projects => Set<ProjectEntity>();
-    public DbSet<UserEntity> Users => Set<UserEntity>();
     public DbSet<BalanceEntity> Balances => Set<BalanceEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -47,3 +47,9 @@ variable "dotnet_version" {
   description = ".NET application stack version for App Services (e.g., \"9.0\", \"10.0\")."
   default     = "10.0"
 }
+
+variable "foundry_location" {
+  type        = string
+  description = "Azure region for the AI Foundry account and model deployments. Must support GPT-4.1. Defaults to 'eastus' which has the broadest model availability."
+  default     = "eastus"
+}

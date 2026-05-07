@@ -28,6 +28,11 @@ app_service_location = "centralus"
 sql_admin_username = "sqladmin"
 sql_admin_password = "<your-secure-sql-password>"
 
+# Azure region for the AI Foundry account and GPT-4.1 deployment.
+# Must support GPT-4.1. See: https://learn.microsoft.com/azure/ai-services/openai/concepts/models
+# Default is "eastus" — change only if you need a different region.
+# foundry_location = "eastus"
+
 # (Optional) .NET version for App Service application stack
 # Default: "10.0"
 # dotnet_version = "10.0"

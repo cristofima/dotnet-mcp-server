@@ -29,6 +29,11 @@ output "foundry_agent_client_id" {
   value       = azuread_application.agent.client_id
 }
 
+output "foundry_endpoint" {
+  description = "Azure AI Foundry account endpoint (OpenAI-compatible base URL)."
+  value       = azapi_resource.ai_foundry.output.properties.endpoint
+}
+
 output "key_vault_uri" {
   description = "Key Vault URI for manual secret retrieval."
   value       = azurerm_key_vault.main.vault_uri

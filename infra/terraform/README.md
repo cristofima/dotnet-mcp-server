@@ -38,16 +38,17 @@ Copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your values. T
 
 | Variable | Required | Description |
 |---|---|---|
-| `prefix` | Yes | 3-8 lowercase alphanumeric chars; prepended to globally unique names (Key Vault, SQL Server, App Services) |
+| `prefix` | Yes | 3-8 lowercase alphanumeric chars; prepended to globally unique names (Key Vault, SQL Server, App Services, AI Foundry) |
 | `tenant_id` | Yes | Entra ID tenant ID — `az account show --query tenantId -o tsv` |
 | `subscription_id` | Yes | Azure subscription ID — `az account show --query id -o tsv` |
 | `location` | No | Region for SQL Server, Key Vault, Log Analytics, App Insights. Default: `centralus` |
 | `app_service_location` | No | Region for the App Service Plan and Web Apps. Default: `centralus` |
+| `foundry_location` | No | Region for the AI Foundry account and model deployments. Must support GPT-4.1. Default: `eastus` |
 | `sql_admin_username` | Yes | SQL Server admin login. Reserved words (`admin`, `sa`, `root`) are rejected by Azure |
 | `sql_admin_password` | Yes | SQL Server admin password. Must include uppercase, lowercase, digit, and special character |
 | `dotnet_version` | No | .NET application stack version for App Services. Default: `10.0` |
 
-> `location` and `app_service_location` can point to different regions. Some Azure subscriptions have quota restrictions that differ by resource type within the same region. Splitting the two variables lets you target each resource type to a region where your subscription has capacity.
+> `location`, `app_service_location`, and `foundry_location` can point to different regions. Some Azure subscriptions have quota restrictions that differ by resource type within the same region. Splitting the variables lets you target each resource type to a region where your subscription has capacity.
 
 ## Apply
 
@@ -65,6 +66,7 @@ terraform apply -var-file=terraform.tfvars -auto-approve
 | `keyvault.tf` | Key Vault (`kv-<prefix>`), Secrets Officer role for the Terraform operator, 4 secrets |
 | `sql.tf` | SQL Server (`sql-<prefix>`), database (`db-backend-api`), firewall rule for Azure services |
 | `app-service.tf` | App Service Plan (`plan-<prefix>`, B1 Linux), 2 web apps with unique default hostnames (`<name>-<hash>.<region>.azurewebsites.net`), Key Vault Secrets User role for each app's managed identity |
+| `foundry.tf` | AI Foundry account (`aif-<prefix>`, AIServices S0), Foundry project (`proj-mcp-server`), GPT-4.1 model deployment (Standard, version `2025-04-14`) |
 
 ## Outputs
 
@@ -76,6 +78,7 @@ terraform apply -var-file=terraform.tfvars -auto-approve
 | `mcp_server_client_id` | MCP Server Entra ID application client ID |
 | `backend_api_client_id` | Backend API Entra ID application client ID |
 | `foundry_agent_client_id` | Foundry agent Entra ID application client ID |
+| `foundry_endpoint` | AI Foundry account endpoint (OpenAI-compatible base URL) |
 | `app_insights_connection_string` | Application Insights connection string (sensitive) |
 
 View sensitive outputs with:
@@ -86,10 +89,18 @@ terraform output -json
 
 ## Post-Apply Manual Steps
 
-Two actions cannot be automated via Terraform and must be done in the Entra ID portal after `apply` completes:
+Three actions cannot be automated via Terraform and must be done manually after `apply` completes:
 
 1. **Grant admin consent**: In [Entra ID Portal](https://entra.microsoft.com) → App registrations → `app-mcp-server` → API permissions → "Grant admin consent". Repeat for `app-foundry-agent`.
-2. **Foundry redirect URI**: Add the Foundry project redirect URI to the `app-foundry-agent` app registration once the project is created.
+
+2. **Register the MCP Server tool in Foundry**: In [Microsoft Foundry](https://ai.azure.com) → your project → **Tools** → **Connect a tool** → search for **Custom MCP Server** → select **OAuth2** as the auth type and fill in:
+   - **Client ID**: value of the `foundry_agent_client_id` output
+   - **Client Secret**: value of `foundry-agent-client-secret` from Key Vault
+   - **Scope**: `api://<mcp_server_client_id>/mcp.access`
+   - **MCP Server URL**: value of the `mcp_server_url` output + `/mcp`
+   - Copy the **Redirect URI** provided by the portal after saving.
+
+3. **Add redirect URI**: In Entra ID Portal → App registrations → `app-foundry-agent` → Authentication → add the redirect URI copied in step 2.
 
 ## State Backend
 

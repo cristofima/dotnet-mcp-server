@@ -81,7 +81,7 @@ resource "azuread_application_password" "mcp_server" {
 
 # Foundry agent (OAuth passthrough) app registration
 # Requires mcp.access on the MCP Server. No custom scopes or app roles (FR-013, FR-014).
-# Redirect URI is left empty and must be added manually after the Foundry project is created.
+# Redirect URI set by Foundry project APIM consent callback.
 resource "azuread_application" "agent" {
   display_name     = "app-foundry-agent"
   sign_in_audience = "AzureADMultipleOrgs"
@@ -102,10 +102,22 @@ resource "azuread_application" "agent" {
   web {
     redirect_uris = []
   }
+
+  # Redirect URIs are added by Foundry when creating MCP tool connections and are unknown at plan time.
+  # ignore_changes prevents Terraform from removing URIs it did not create.
+  lifecycle {
+    ignore_changes = [web[0].redirect_uris]
+  }
 }
 
 resource "azuread_service_principal" "agent" {
   client_id = azuread_application.agent.client_id
+}
+
+# Application ID URI for agent: api://<client_id>
+resource "azuread_application_identifier_uri" "agent" {
+  application_id = azuread_application.agent.id
+  identifier_uri = "api://${azuread_application.agent.client_id}"
 }
 
 resource "azuread_application_password" "agent" {

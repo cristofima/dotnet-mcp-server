@@ -19,6 +19,11 @@ resource "azuread_application" "backend_api" {
       value                      = "user_impersonation"
     }
   }
+
+  # identifier_uris is managed by azuread_application_identifier_uri to avoid circular dependency.
+  lifecycle {
+    ignore_changes = [identifier_uris]
+  }
 }
 
 resource "azuread_service_principal" "backend_api" {
@@ -60,6 +65,11 @@ resource "azuread_application" "mcp_server" {
       id   = local.backend_api_user_impersonation_scope_id
       type = "Scope"
     }
+  }
+
+  # identifier_uris is managed by azuread_application_identifier_uri to avoid circular dependency.
+  lifecycle {
+    ignore_changes = [identifier_uris]
   }
 }
 
@@ -103,10 +113,10 @@ resource "azuread_application" "agent" {
     redirect_uris = []
   }
 
+  # identifier_uris is managed by azuread_application_identifier_uri to avoid circular dependency.
   # Redirect URIs are added by Foundry when creating MCP tool connections and are unknown at plan time.
-  # ignore_changes prevents Terraform from removing URIs it did not create.
   lifecycle {
-    ignore_changes = [web[0].redirect_uris]
+    ignore_changes = [identifier_uris, web[0].redirect_uris]
   }
 }
 

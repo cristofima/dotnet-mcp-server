@@ -60,10 +60,8 @@ Registers the MCP server with tools, prompts, and filters. Tools and prompts are
 .WithTools<TaskTools>()
 .WithTools<ProjectsTools>()
 .WithTools<BalancesTools>()
-.WithTools<AdminTools>()
 .WithPrompts<TaskPrompts>()
 .WithPrompts<ProjectPrompts>()
-.WithPrompts<AdminPrompts>()
 ```
 
 #### WellKnownEndpointExtensions (`Extensions/WellKnownEndpointExtensions.cs`)
@@ -111,7 +109,7 @@ The queue absorbs short bursts without dropping requests and enforces backpressu
 
 ### Tools (`Tools/`)
 
-Four sealed tool classes, one per domain. Each class uses primary constructor to inject use cases (from `McpServer.Application/UseCases/`). Every method delegates to exactly one use case via `ExecuteAsync()` and returns `result.ToJson()`.
+Three sealed tool classes, one per domain. Each class uses primary constructor to inject use cases (from `McpServer.Application/UseCases/`). Every method delegates to exactly one use case via `ExecuteAsync()` and returns `result.ToJson()`.
 
 **Mandatory patterns** (enforced by project conventions):
 
@@ -144,14 +142,13 @@ public sealed class TaskTools(
 | --------------- | ----- | -------- |
 | `TaskTools`     | 4     | Tasks    |
 | `ProjectsTools` | 2     | Projects |
-| `BalancesTools` | 1     | Balances |
-| `AdminTools`    | 1     | Admin    |
+| `BalancesTools` | 2     | Balances |
 
 For the full tools catalog with parameters, see the [project-level README](../README.md#tools-catalog).
 
 ### Prompts (`Prompts/`)
 
-Three sealed prompt classes. Return `ChatMessage` (from `Microsoft.Extensions.AI`) with structured prompt text. Same authorization pattern as tools.
+Two sealed prompt classes. Return `ChatMessage` (from `Microsoft.Extensions.AI`) with structured prompt text. Same authorization pattern as tools.
 
 ```csharp
 [McpServerPromptType]
@@ -172,7 +169,6 @@ public sealed class TaskPrompts
 | ---------------- | ------- | -------- |
 | `TaskPrompts`    | 2       | Tasks    |
 | `ProjectPrompts` | 2       | Projects |
-| `AdminPrompts`   | 2       | Admin    |
 
 For the full prompts catalog with arguments, see the [project-level README](../README.md#prompts-catalog).
 
@@ -207,9 +203,7 @@ For every tool invocation, the filter automatically:
 
 `McpTelemetryFilter` maintains a static `ToolDataClassifications` dictionary mapping tool names to classification labels. The PDP uses this label to apply tighter controls.
 
-| Tool                | Classification | Rationale                                                             |
-| ------------------- | -------------- | --------------------------------------------------------------------- |
-| `get_backend_users` | `sensitive`    | Returns PII (usernames, roles, last login), reconnaissance capability |
+No tools are currently classified as sensitive. Add entries to `ToolDataClassifications` when tools return PII or security-sensitive data.
 
 #### Session ID Span Propagation
 

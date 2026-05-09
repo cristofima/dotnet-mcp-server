@@ -2,13 +2,13 @@
 
 ## Overview
 
-The MCP Server is an OAuth2-secured [Model Context Protocol](https://modelcontextprotocol.io/) server built with .NET 10 and Microsoft Entra ID. It exposes **8 MCP tools** across 4 tool classes and **6 MCP prompts** across 3 prompt classes, protected by role-based authorization via App Roles. Backend API calls use OAuth 2.0 On-Behalf-Of (OBO) token exchange.
+The MCP Server is an OAuth2-secured [Model Context Protocol](https://modelcontextprotocol.io/) server built with .NET 10 and Microsoft Entra ID. It exposes **8 MCP tools** across 3 tool classes and **4 MCP prompts** across 2 prompt classes, protected by JWT Bearer authentication. Backend API calls use OAuth 2.0 On-Behalf-Of (OBO) token exchange.
 
 The server runs as part of a .NET Aspire-orchestrated solution. Token lifecycle: client authenticates with Entra ID, sends JWT to the MCP Server, server validates and authorizes, then exchanges the token (OBO) to call the downstream API.
 
 - **Base URL**: `http://localhost:5230`
 - **Transport**: [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) (`/mcp`)
-- **MCP SDK**: `ModelContextProtocol.AspNetCore` v1.2.0
+- **MCP SDK**: `ModelContextProtocol.AspNetCore` v1.3.0
 - **Target Framework**: .NET 10
 - **Identity Provider**: Microsoft Entra ID (OAuth 2.0 OBO Flow)
 
@@ -48,7 +48,7 @@ sequenceDiagram
     participant Client as MCP Client (Copilot, UI)
     participant Server as MCP Server :5230
     participant Entra as Microsoft Entra ID<br/>login.microsoftonline.com<br/>Configured via appsettings.json
-    participant MockApi as MockApi
+    participant BackendApi as BackendApi
 
     Client->>Entra: OAuth2 Authorization
     Entra-->>Client: Access Token (JWT)
@@ -58,15 +58,15 @@ sequenceDiagram
     Server->>Entra: OAuth 2.0 OBO Token Exchange<br/>aud: api://{id}
     Entra-->>Server: API Access Token
 
-    Server->>MockApi: API Request (Bearer Token)
-    MockApi-->>Server: API Response
+    Server->>BackendApi: API Request (Bearer Token)
+    BackendApi-->>Server: API Response
     Server-->>Client: Response
 ```
 
 1. **Client authenticates** with Entra ID using the appropriate OAuth 2.0 flow for its client type (see [docs/OAUTH2-FLOWS-BY-CLIENT.md](../../docs/OAUTH2-FLOWS-BY-CLIENT.md)).
 2. **Client calls MCP Server** with `Authorization: Bearer <token>`.
 3. **Server validates JWT**: issuer, audience (`api://{client-id}`), and lifetime.
-4. **Authorization attributes** check App Role permissions (e.g., `mcp:task:read`, `mcp:admin:access`) from JWT `roles` claim.
+4. **Authorization** is enforced at class level via `[Authorize]` — all authenticated users can invoke any tool.
 5. **For backend API tools**: Server performs OBO flow via MSAL to get a new token with `aud: api://{api-client-id}`. Token passthrough is not supported.
 
 For details on the OBO flow, see [Microsoft identity platform and OAuth 2.0 On-Behalf-Of flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow).
@@ -97,21 +97,14 @@ Backend project management tools.
 
 Backend financial balance tools.
 
-| Tool Name             | Description                         | Parameters           |
-| --------------------- | ----------------------------------- | -------------------- |
-| `get_project_balance` | Get financial balance for a project | `projectId` (string) |
-
-### AdminTools (`McpServer.Presentation/Tools/AdminTools.cs`)
-
-Administrative tools (restricted access). `get_backend_users` carries `data_classification=sensitive` (see [McpServer.Presentation/README.md](McpServer.Presentation/README.md#data-classification)).
-
-| Tool Name           | Description                    | Parameters |
-| ------------------- | ------------------------------ | ---------- |
-| `get_backend_users` | Get list of users from backend | (none)     |
+| Tool Name             | Description                                                 | Parameters                                                                         |
+| --------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `get_project_balance` | Get financial balance for a project                         | `projectId` (string)                                                               |
+| `transfer_budget`     | Transfer budget between projects (cannot be undone)         | `sourceProjectId` (string), `targetProjectId` (string), `amount` (decimal)        |
 
 ## Prompts Catalog
 
-MCP Prompts provide reusable prompt templates that AI clients can invoke for structured analysis. All prompts require authentication and role-based authorization.
+MCP Prompts provide reusable prompt templates that AI clients can invoke for structured analysis. All prompts require authentication.
 
 ### TaskPrompts (`McpServer.Presentation/Prompts/TaskPrompts.cs`)
 
@@ -127,54 +120,9 @@ MCP Prompts provide reusable prompt templates that AI clients can invoke for str
 | `analyze_project`  | Detailed analysis of a specific project | `projectId` (string, required) |
 | `compare_projects` | Compare all projects side-by-side       | (none)                         |
 
-### AdminPrompts (`McpServer.Presentation/Prompts/AdminPrompts.cs`)
-
-| Prompt Name            | Description                          | Arguments |
-| ---------------------- | ------------------------------------ | --------- |
-| `compliance_checklist` | Generate compliance review checklist | (none)    |
-| `user_audit`           | Create user access audit report      | (none)    |
-
 ## Authorization
 
-### App Roles
-
-Granular permissions defined as App Roles in Microsoft Entra ID:
-
-| Permission      | Tool/Prompt Type              | Description                |
-| --------------- | ----------------------------- | -------------------------- |
-| `task:read`     | TaskTools, TaskPrompts        | Read task operations       |
-| `task:write`    | TaskTools                     | Create/update/delete tasks |
-| `balance:read`  | BalancesTools                 | View balances              |
-| `balance:write` | BalancesTools                 | Modify balances            |
-| `project:read`  | ProjectsTools, ProjectPrompts | View projects              |
-| `project:write` | ProjectsTools                 | Modify projects            |
-| `admin:access`  | AdminTools, AdminPrompts      | Admin operations           |
-
-Permission constants are in `McpServer.Domain/Constants/Permissions.cs` with the `mcp:` prefix. Matching Entra ID App Role definitions are in `azure-config/mcp-server-roles.json`. See [docs/PERMISSION-SETUP-GUIDE.md](../../docs/PERMISSION-SETUP-GUIDE.md) for setup.
-
-### Tool → Permission Mapping
-
-| Tool                  | Required Permission | Description            |
-| --------------------- | ------------------- | ---------------------- |
-| `get_tasks`           | `mcp:task:read`     | View user's tasks      |
-| `create_task`         | `mcp:task:write`    | Create new task        |
-| `update_task_status`  | `mcp:task:write`    | Update task status     |
-| `delete_task`         | `mcp:task:write`    | Delete task            |
-| `get_projects`        | `mcp:project:read`  | List projects          |
-| `get_project_details` | `mcp:project:read`  | View project details   |
-| `get_project_balance` | `mcp:balance:read`  | View financial balance |
-| `get_backend_users`   | `mcp:admin:access`  | Admin-only user list   |
-
-### Prompt → Permission Mapping
-
-| Prompt                    | Required Permission | Description                        |
-| ------------------------- | ------------------- | ---------------------------------- |
-| `summarize_tasks`         | `mcp:task:read`     | Summarize user's tasks             |
-| `analyze_task_priorities` | `mcp:task:read`     | Analyze task priority distribution |
-| `analyze_project`         | `mcp:project:read`  | Detailed project analysis          |
-| `compare_projects`        | `mcp:project:read`  | Compare projects side-by-side      |
-| `compliance_checklist`    | `mcp:admin:access`  | Admin-only compliance review       |
-| `user_audit`              | `mcp:admin:access`  | Admin-only user audit              |
+All tools and prompts require a valid JWT Bearer token (`[Authorize]` at class level). No App Role enforcement is applied in code — any authenticated user with a token accepted by the configured audience can invoke any tool or prompt.
 
 ## OBO Security Posture
 
@@ -301,7 +249,7 @@ cd src/McpServer.AppHost
 dotnet run
 ```
 
-Starts MCP Server and MockApi together with automatic service discovery. Open the Aspire Dashboard (URL in console) to monitor traces, metrics, and logs.
+Starts MCP Server and BackendApi together with automatic service discovery. Open the Aspire Dashboard (URL in console) to monitor traces, metrics, and logs.
 
 ### Standalone
 
